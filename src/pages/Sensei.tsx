@@ -7,6 +7,7 @@ import { speak } from "../lib/tts.ts";
 import { isJapanese } from "../lib/japanese.ts";
 import { AiText } from "../components/AiText.tsx";
 import { PageHead, Seg } from "../components/ui.tsx";
+import { aiEnabled } from "../lib/aiStatus.ts";
 
 type Mode = "ngobrol" | "koreksi" | "tanya" | "jlpt";
 const MODES: { v: Mode; label: string; icon: typeof Bot; hello: string; starters: string[] }[] = [
@@ -52,6 +53,8 @@ export default function Sensei() {
   const logRef = useRef<HTMLDivElement>(null);
   const started = useRef(Date.now());
   const messages = threads[mode];
+  const [enabled, setEnabled] = useState<boolean | null>(null);
+  useEffect(() => void aiEnabled().then(setEnabled), []);
   const meta = MODES.find((m) => m.v === mode)!;
 
   useEffect(() => {
@@ -102,6 +105,14 @@ export default function Sensei() {
       setBusy(false);
       abort.current = null;
     }
+  }
+
+  if (enabled === false) {
+    return (
+      <div className="page">
+        <PageHead eyebrow={<><Bot style={{ width: 14 }} /> Sensei AI</>} title="Sensei AI belum aktif" lead="Fitur tutor AI bersifat opsional dan membutuhkan API key di server. Semua fitur belajar lain tetap gratis dan bisa dipakai." />
+      </div>
+    );
   }
 
   return (

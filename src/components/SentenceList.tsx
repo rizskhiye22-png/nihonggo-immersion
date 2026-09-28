@@ -7,6 +7,7 @@ import { streamAi } from "../lib/ai.ts";
 import { JapaneseText } from "./JapaneseText.tsx";
 import type { PopupContext } from "./WordPopup.tsx";
 import { AiText } from "./AiText.tsx";
+import { useAiEnabled } from "../lib/aiStatus.ts";
 
 export type TrMode = "hide" | "blur" | "show";
 type S = { ja: string; id?: string; w: Word[] };
@@ -23,6 +24,7 @@ export function SentenceList({ sentences, tr, base, level, playAll, onPlayAllEnd
   const [playing, setPlaying] = useState(-1);
   const [revealed, setRevealed] = useState<Set<number>>(new Set());
   const [ai, setAi] = useState<Record<number, { text: string; busy: boolean; error?: string }>>({});
+  const aiOn = useAiEnabled();
 
   useEffect(() => {
     if (!playAll) {
@@ -73,9 +75,11 @@ export function SentenceList({ sentences, tr, base, level, playAll, onPlayAllEnd
             }}>
               {playing === i ? <Pause /> : <Volume2 />}
             </button>
-            <button className="btn icon sm ghost" aria-label="Analisis AI" onClick={() => explain(i)}>
-              <Sparkles />
-            </button>
+            {aiOn && (
+              <button className="btn icon sm ghost" aria-label="Analisis AI" onClick={() => explain(i)}>
+                <Sparkles />
+              </button>
+            )}
           </div>
           <div className="grow">
             <JapaneseText words={s.w} context={{ ...base, ja: s.ja, tr: s.id }} />

@@ -1,9 +1,30 @@
-import { lazy, Suspense, useEffect, type ReactNode } from "react";
+import { lazy as reactLazy, Suspense, useEffect, type ComponentType, type ReactNode } from "react";
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { AppLayout } from "./components/Layout.tsx";
 import { WordPopupProvider } from "./components/WordPopup.tsx";
 import { Spinner, Toasts } from "./components/ui.tsx";
 import { useStore } from "./lib/store.ts";
+
+// Setelah situs di-update, file halaman lama bisa hilang dari server. Muat ulang otomatis sekali
+// agar pengguna tidak perlu me-refresh manual.
+function lazy<T extends ComponentType>(load: () => Promise<{ default: T }>) {
+  return reactLazy(() =>
+    load().then(
+      (m) => {
+        sessionStorage.removeItem("themars:reloaded");
+        return m;
+      },
+      (err) => {
+        if (!sessionStorage.getItem("themars:reloaded")) {
+          sessionStorage.setItem("themars:reloaded", "1");
+          window.location.reload();
+          return new Promise<{ default: T }>(() => {});
+        }
+        throw err;
+      },
+    ),
+  );
+}
 
 const Landing = lazy(() => import("./pages/Landing.tsx"));
 const Onboarding = lazy(() => import("./pages/Onboarding.tsx"));

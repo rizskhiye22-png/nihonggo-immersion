@@ -8,6 +8,8 @@ import { setWordStatus, useStore } from "../lib/store.ts";
 import { addCard, hasCard } from "../lib/srs.ts";
 import { speak } from "../lib/tts.ts";
 import { streamAi } from "../lib/ai.ts";
+import { useAiEnabled } from "../lib/aiStatus.ts";
+import { meaningId } from "../lib/translate.ts";
 import { putImage } from "../lib/idb.ts";
 import { AiText } from "./AiText.tsx";
 import { LevelBadge, toast } from "./ui.tsx";
@@ -55,7 +57,9 @@ function Popup({ word, rect, ctx, onClose }: Open & { onClose: () => void }) {
   const status = useStore((s) => s.words[key]?.s);
   const cards = useStore((s) => s.cards);
   const inDeck = useMemo(() => Object.values(cards).some((c) => c.key === key), [cards, key]);
-  const idMeaning = ctx?.idMeanings?.[word.b] ?? ctx?.idMeanings?.[word.s];
+  const aiOn = useAiEnabled();
+  const [autoId, setAutoId] = useState<string>();
+  const idMeaning = ctx?.idMeanings?.[word.b] ?? ctx?.idMeanings?.[word.s] ?? autoId;
 
   useEffect(() => {
     let alive = true;
@@ -101,6 +105,16 @@ function Popup({ word, rect, ctx, onClose }: Open & { onClose: () => void }) {
   }, [onClose]);
 
   const main = entries?.[0];
+
+  // Arti Bahasa Indonesia otomatis (terjemahan gratis dari arti kamus)
+  useEffect(() => {
+    if (!main || ctx?.idMeanings?.[word.b] || ctx?.idMeanings?.[word.s]) return;
+    let alive = true;
+    meaningId(main.m).then((t) => alive && setAutoId(t), () => {});
+    return () => {
+      alive = false;
+    };
+  }, [main, ctx, word]);
 
   async function save() {
     if (hasCard(key)) return;
@@ -198,9 +212,11 @@ function Popup({ word, rect, ctx, onClose }: Open & { onClose: () => void }) {
         <button className={`btn sm${status === "known" ? " gold" : ""}`} onClick={() => setWordStatus(key, status === "known" ? null : "known")}>
           <Check /> {status === "known" ? "Dikuasai" : "Sudah tahu"}
         </button>
-        <button className="btn sm" onClick={explain} disabled={ai?.busy}>
-          <Sparkles /> Jelaskan (AI)
-        </button>
+        {aiOn && (
+          <button className="btn sm" onClick={explain} disabled={ai?.busy}>
+            <Sparkles /> Jelaskan (AI)
+          </button>
+        )}
         <a className="btn sm" href={`https://jisho.org/search/${encodeURIComponent(main?.w ?? word.b)}`} target="_blank" rel="noreferrer">
           <ExternalLink /> Jisho
         </a>

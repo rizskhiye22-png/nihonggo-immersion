@@ -18,6 +18,7 @@ type Props = {
 export const JapaneseText = memo(function JapaneseText({ words, size, context, static: isStatic, furigana, className }: Props) {
   const status = useStore((s) => s.words);
   const setting = useStore((s) => s.settings.furigana);
+  const lookupMode = useStore((s) => s.settings.lookup);
   const mode = furigana ?? setting;
   const popup = useWordPopup();
 
@@ -50,6 +51,13 @@ export const JapaneseText = memo(function JapaneseText({ words, size, context, s
             onClick={(e) => {
               e.stopPropagation();
               popup.open(w, (e.currentTarget as HTMLElement).getBoundingClientRect(), context);
+            }}
+            onMouseMove={(e) => {
+              // Seperti Yomitan: tahan Shift (atau mode hover) lalu arahkan kursor ke kata
+              if (popup.selected === w) return;
+              if (lookupMode === "hover" || (lookupMode !== "click" && e.shiftKey)) {
+                popup.open(w, (e.currentTarget as HTMLElement).getBoundingClientRect(), context);
+              }
             }}
           >
             {body}

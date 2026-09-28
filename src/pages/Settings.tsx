@@ -47,6 +47,9 @@ export default function SettingsPage() {
           <Row title="Furigana" desc="Adaptif: furigana disembunyikan pada kata yang sudah kamu kuasai.">
             <Seg value={settings.furigana} onChange={(furigana) => setS({ furigana })} options={[{ v: "all" as const, label: "Selalu" }, { v: "unknown" as const, label: "Adaptif" }, { v: "none" as const, label: "Tanpa" }]} />
           </Row>
+          <Row title="Cara membuka kamus" desc="Seperti Yomitan: tahan Shift lalu arahkan kursor ke kata. Mode arahkan membuka kamus tanpa klik.">
+            <Seg value={settings.lookup} onChange={(lookup) => setS({ lookup })} options={[{ v: "click" as const, label: "Klik" }, { v: "shift" as const, label: "Klik + Shift" }, { v: "hover" as const, label: "Arahkan" }]} />
+          </Row>
           <Row title="Kartu baru per hari" desc="Kartu baru yang diperkenalkan setiap hari. 10–20 ideal untuk kebanyakan orang.">
             <input className="input" type="number" min={0} max={100} style={{ maxWidth: 120 }} value={settings.newPerDay} onChange={(e) => setS({ newPerDay: Math.max(0, Number(e.target.value)) })} />
           </Row>

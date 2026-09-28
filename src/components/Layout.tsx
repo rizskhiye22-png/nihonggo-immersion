@@ -9,11 +9,13 @@ import { TimerPill } from "./ImmersionTimer.tsx";
 import { LevelBadge } from "./ui.tsx";
 import { setState, streak, useStore } from "../lib/store.ts";
 import { countDue } from "../lib/srs.ts";
+import { useAiEnabled } from "../lib/aiStatus.ts";
 
 type Item = { to: string; label: string; icon: ReactNode; count?: number };
 
 export function AppLayout() {
   const [open, setOpen] = useState(false);
+  const aiOn = useAiEnabled();
   const loc = useLocation();
   const profile = useStore((s) => s.profile);
   const cards = useStore((s) => s.cards);
@@ -56,7 +58,7 @@ export function AppLayout() {
     {
       label: "Asisten & Progres",
       items: [
-        { to: "/sensei", label: "Sensei AI", icon: <Bot /> },
+        ...(aiOn ? [{ to: "/sensei", label: "Sensei AI", icon: <Bot /> }] : []),
         { to: "/koleksi", label: "Koleksi Kartu", icon: <GraduationCap /> },
         { to: "/log", label: "Log Imersi", icon: <NotebookPen /> },
       ],
@@ -127,7 +129,7 @@ export function AppLayout() {
           { to: "/studio", label: "Studio", icon: <Clapperboard /> },
           { to: "/review", label: `Review${due ? ` (${due})` : ""}`, icon: <Brain /> },
           { to: "/baca", label: "Baca", icon: <LibraryBig /> },
-          { to: "/sensei", label: "Sensei", icon: <Bot /> },
+          aiOn ? { to: "/sensei", label: "Sensei", icon: <Bot /> } : { to: "/kosakata", label: "Kosakata", icon: <Layers /> },
         ].map((it) => (
           <NavLink key={it.to} to={it.to} className={({ isActive }) => (isActive ? "active" : "")}>
             {it.icon}

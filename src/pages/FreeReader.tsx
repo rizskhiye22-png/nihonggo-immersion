@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { FileText, Languages, ScanText, Sparkles, Trash2, Wand2 } from "lucide-react";
-import { analyse, splitSentences, tokenizerStatus } from "../lib/tokenizer.ts";
-import { generateStory, translateLines } from "../lib/ai.ts";
+import { analyseMany, splitSentences, tokenizerStatus } from "../lib/tokenizer.ts";
+import { generateStory } from "../lib/ai.ts";
+import { useAiEnabled } from "../lib/aiStatus.ts";
+import { translateMany } from "../lib/translate.ts";
 import { parseSubtitles } from "../lib/subtitles.ts";
 import { addLog, useStore } from "../lib/store.ts";
 import { LEVELS, type Level } from "../lib/types.ts";
@@ -24,6 +26,7 @@ export default function FreeReader() {
   const [busy, setBusy] = useState(false);
   const [tr, setTr] = useState<TrMode>("blur");
   const [playAll, setPlayAll] = useState(false);
+  const aiOn = useAiEnabled();
   const [aiOpen, setAiOpen] = useState(params.get("ai") === "1");
   const [aiLevel, setAiLevel] = useState<Level>(my);
   const [topic, setTopic] = useState(TOPICS[0]);
@@ -34,9 +37,8 @@ export default function FreeReader() {
     setBusy(true);
     setTitle(t);
     try {
-      const out: Sent[] = [];
-      for (const s of input) out.push({ ...s, w: await analyse(s.ja) });
-      setSents(out);
+      const ws = await analyseMany(input.map((s) => s.ja));
+      setSents(input.map((s, i) => ({ ...s, w: ws[i] })));
       setStarted(Date.now());
     } catch {
       toast("Tokenizer gagal dimuat. Periksa koneksi internet lalu coba lagi.");
@@ -90,7 +92,7 @@ export default function FreeReader() {
       const out = [...sents];
       for (let i = 0; i < out.length; i += 30) {
         const chunk = out.slice(i, i + 30);
-        const res = await translateLines(chunk.map((s) => s.ja), my);
+        const res = await translateMany(chunk.map((s) => s.ja));
         res.forEach((t, j) => (out[i + j] = { ...out[i + j], id: t }));
         setSents([...out]);
       }
@@ -109,10 +111,10 @@ export default function FreeReader() {
         title="Baca teks Jepang apa pun"
         lead="Tempel artikel NHK, lirik lagu, dialog game, transkrip podcast, atau subtitle. Setiap kata langsung bisa diklik, didengar, dan ditambang."
       >
-        <button className="btn primary" onClick={() => setAiOpen((v) => !v)}><Sparkles /> Buat cerita AI</button>
+        {aiOn && <button className="btn primary" onClick={() => setAiOpen((v) => !v)}><Sparkles /> Buat cerita AI</button>}
       </PageHead>
 
-      {aiOpen && (
+      {aiOn && aiOpen && (
         <div className="card glow" style={{ marginBottom: 18 }}>
           <div className="card-title"><Wand2 style={{ color: "var(--mars-2)" }} /><h3 className="grow">Generator cerita bertingkat</h3></div>
           <p className="muted" style={{ marginTop: -6 }}>Sensei AI menulis cerita baru sesuai level JLPT-mu, lengkap dengan terjemahan Indonesia per kalimat.</p>
@@ -157,7 +159,7 @@ export default function FreeReader() {
           <div className="toolbar">
             <strong className="grow">{title} · {sents.length} kalimat</strong>
             <Seg value={tr} onChange={setTr} options={[{ v: "hide" as const, label: "Tanpa arti" }, { v: "blur" as const, label: "Arti samar" }, { v: "show" as const, label: "Arti" }]} />
-            <button className="btn sm" onClick={translateAll} disabled={busy}><Languages /> Terjemahkan (AI)</button>
+            <button className="btn sm" onClick={translateAll} disabled={busy}><Languages /> Terjemahkan (ID)</button>
             <PlayAllButton on={playAll} onClick={() => setPlayAll((p) => !p)} />
           </div>
           <div className="card" style={{ padding: "10px 6px" }}>

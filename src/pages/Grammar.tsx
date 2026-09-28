@@ -7,11 +7,13 @@ import { speak } from "../lib/tts.ts";
 import { LEVELS, type Level } from "../lib/types.ts";
 import { JapaneseText } from "../components/JapaneseText.tsx";
 import { LevelBadge, PageHead, Seg } from "../components/ui.tsx";
+import { useAiEnabled } from "../lib/aiStatus.ts";
 
 export default function Grammar() {
   const my = useStore((s) => s.profile.level);
   const [level, setLevel] = useState<Level>(my);
   const { data, loading } = useGrammar();
+  const aiOn = useAiEnabled();
   const list = useMemo(() => (data ?? []).filter((g) => g.level === level), [data, level]);
 
   return (
@@ -44,9 +46,11 @@ export default function Grammar() {
                 <div className="label">Pembentukan</div>
                 <div className="jp" style={{ padding: "10px 12px", borderRadius: 12, background: "var(--surface-2)", margin: "6px 0 12px", fontWeight: 600 }}>{g.formation}</div>
                 <p style={{ color: "var(--text-2)", margin: 0 }}>{g.explanation}</p>
-                <Link to={`/sensei?q=${encodeURIComponent(`Jelaskan pola ${g.pattern} dengan 3 contoh lain dan bedanya dengan pola yang mirip.`)}`} className="btn sm ghost" style={{ marginTop: 12 }}>
-                  <Bot /> Tanya Sensei AI
-                </Link>
+                {aiOn && (
+                  <Link to={`/sensei?q=${encodeURIComponent(`Jelaskan pola ${g.pattern} dengan 3 contoh lain dan bedanya dengan pola yang mirip.`)}`} className="btn sm ghost" style={{ marginTop: 12 }}>
+                    <Bot /> Tanya Sensei AI
+                  </Link>
+                )}
               </div>
               <div className="stack" style={{ gap: 10 }}>
                 {g.examples.map((ex, j) => (

@@ -8,7 +8,7 @@ ditambang ke flashcard, lalu diulang dengan algoritma **FSRS**.
 
 | Fitur | Keterangan |
 |---|---|
-| **Studio Tonton** | Putar YouTube atau file video/audio milik pengguna + subtitle Jepang (.srt/.vtt/.ass). Subtitle interaktif dengan furigana, klik kata untuk arti, jeda otomatis per baris, ulangi baris, mode dengar (subtitle samar), subtitle terjemahan kedua, terjemahan AI, analisis kalimat AI, layar penuh, dan pintasan keyboard. Kata yang ditambang menyimpan kalimat, waktu adegan, dan tangkapan layar (untuk file lokal). Waktu menonton tercatat otomatis. |
+| **Studio Tonton** | Putar YouTube atau file video/audio milik pengguna. **Subtitle otomatis dari suara**: Whisper berjalan di browser (WebGPU/CPU), gratis, tanpa API key. Untuk YouTube lewat berbagi audio tab, untuk file lokal lewat transkripsi penuh atau mode dengar langsung. Bisa juga memuat subtitle .srt/.vtt/.ass. Setiap baris menampilkan **daftar kata + cara baca + arti Bahasa Indonesia** otomatis (mirip Yomitan), terjemahan kalimat gratis, jeda otomatis per baris, mode dengar, tangkapan layar adegan saat menambang, dan ekspor subtitle .srt. |
 | **Perpustakaan** | 10 cerita bertingkat karya asli (N5–N1), furigana adaptif, audio TTS per kalimat/putar semua, terjemahan Indonesia (samar/tampil), kosakata kunci, dan meter pemahaman. |
 | **Pembaca Bebas** | Tempel teks Jepang apa pun (NHK, lirik, subtitle), lalu tokenisasi dan kamus berjalan langsung di browser. Ada juga generator cerita AI sesuai level. |
 | **Review (FSRS)** | Flashcard kalimat dengan gambar adegan, pratinjau interval, dan pintasan 1–4. |
@@ -27,7 +27,10 @@ dan kartu bisa diekspor ke CSV untuk Anki.
 ## Teknologi
 
 - **Frontend:** React 19 + Vite + TypeScript, dengan CSS kustom (tanpa framework UI).
-- **Backend AI:** Cloudflare Pages Functions (`functions/api/ai/[action].ts`) + Claude API (`@anthropic-ai/sdk`).
+- **Pengenal suara (gratis):** Whisper lewat transformers.js di Web Worker. Library dimuat dari CDN jsDelivr, model dari Hugging Face (diunduh sekali, lalu di-cache browser).
+- **Terjemahan (gratis):** Translator API bawaan Chrome/Edge (on-device), dengan cadangan MyMemory. Hasil disimpan di cache lokal.
+- **Tokenizer:** kuromoji di Web Worker (`public/workers/kuromoji-worker.js`) agar halaman tidak macet.
+- **Backend AI (opsional):** Cloudflare Pages Functions + Claude API. Hanya aktif jika `ANTHROPIC_API_KEY` diisi. Tanpa key, tombol AI disembunyikan dan semua fitur lain tetap jalan.
 - **Bahasa Jepang:** kuromoji.js (tokenisasi), JMdict/KANJIDIC2/KanjiVG (kamus, lewat paket `kotobako-data`), dan ts-fsrs.
 
 ## Menjalankan secara lokal
@@ -57,7 +60,8 @@ ini tidak di-commit. Butuh **Node.js 22.18+**.
    - Build command: `npm run build`
    - Build output directory: `dist`
    - Environment variable: `NODE_VERSION` = `22`
-3. Tambahkan variabel di **Settings → Variables and Secrets** (tipe *Secret*):
+3. (Opsional, berbayar) Untuk Sensei AI, tambahkan di **Settings → Variables and Secrets** (tipe *Secret*).
+   Tanpa langkah ini situs tetap berfungsi penuh secara gratis:
    - `ANTHROPIC_API_KEY`: kunci API dari console.anthropic.com
    - (opsional) `AI_MODEL`: default `claude-opus-5`
    - (opsional) `AI_DAILY_LIMIT`: batas permintaan AI per IP per hari (default 60, butuh KV di langkah 5)
