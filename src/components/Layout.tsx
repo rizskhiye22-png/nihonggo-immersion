@@ -1,21 +1,18 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import {
-  BookOpenText, Bot, Brain, Clapperboard, Compass, Flame, GraduationCap, House, Layers, LibraryBig, Menu, Moon,
-  NotebookPen, Orbit, ScanText, Settings, Sun, Target, Tv, Type,
+  Brain, Clapperboard, Compass, Flame, GraduationCap, House, Languages, LibraryBig, Menu, Moon, NotebookPen, Orbit, ScanText, Settings, Sun, Tv,
 } from "lucide-react";
 import { Logo } from "./Logo.tsx";
 import { TimerPill } from "./ImmersionTimer.tsx";
 import { LevelBadge } from "./ui.tsx";
 import { setState, streak, useStore } from "../lib/store.ts";
 import { countDue } from "../lib/srs.ts";
-import { useAiEnabled } from "../lib/aiStatus.ts";
 
 type Item = { to: string; label: string; icon: ReactNode; count?: number };
 
 export function AppLayout() {
   const [open, setOpen] = useState(false);
-  const aiOn = useAiEnabled();
   const loc = useLocation();
   const profile = useStore((s) => s.profile);
   const cards = useStore((s) => s.cards);
@@ -34,31 +31,25 @@ export function AppLayout() {
       items: [
         { to: "/beranda", label: "Beranda", icon: <House /> },
         { to: "/review", label: "Review", icon: <Brain />, count: due },
-        { to: "/metode", label: "Metode & Roadmap", icon: <Compass /> },
+        { to: "/metode", label: "Metode Imersi", icon: <Compass /> },
       ],
     },
     {
-      label: "Imersi",
+      label: "Input · Tonton & Dengar",
       items: [
         { to: "/studio", label: "Studio Tonton", icon: <Clapperboard /> },
-        { to: "/tonton", label: "Rekomendasi Tontonan", icon: <Tv /> },
-        { to: "/baca", label: "Perpustakaan", icon: <LibraryBig /> },
+        { to: "/tonton", label: "Anime, Film & Podcast", icon: <Tv /> },
+        { to: "/baca", label: "Cerita Bersuara", icon: <LibraryBig /> },
         { to: "/pembaca", label: "Pembaca Bebas", icon: <ScanText /> },
       ],
     },
     {
-      label: "Persiapan JLPT",
-      items: [
-        { to: "/kosakata", label: "Kosakata", icon: <Layers /> },
-        { to: "/kanji", label: "Kanji", icon: <Type /> },
-        { to: "/tata-bahasa", label: "Tata Bahasa", icon: <BookOpenText /> },
-        { to: "/kuis", label: "Kuis JLPT", icon: <Target /> },
-      ],
+      label: "Output · Bicara & Tulis",
+      items: [{ to: "/terjemah", label: "Penerjemah JP ⇄ ID", icon: <Languages /> }],
     },
     {
-      label: "Asisten & Progres",
+      label: "Progres",
       items: [
-        ...(aiOn ? [{ to: "/sensei", label: "Sensei AI", icon: <Bot /> }] : []),
         { to: "/koleksi", label: "Koleksi Kartu", icon: <GraduationCap /> },
         { to: "/log", label: "Log Imersi", icon: <NotebookPen /> },
       ],
@@ -90,7 +81,7 @@ export function AppLayout() {
           <div className="card" style={{ padding: 14, marginTop: 12, background: "var(--surface)" }}>
             <div className="row">
               <Orbit style={{ width: 18, color: "var(--gold)" }} />
-              <span style={{ fontWeight: 700, fontSize: "0.85rem" }}>Target</span>
+              <span style={{ fontWeight: 700, fontSize: "0.85rem" }}>Tahapmu</span>
               <span className="grow" />
               <LevelBadge level={profile.level} />
             </div>
@@ -129,7 +120,7 @@ export function AppLayout() {
           { to: "/studio", label: "Studio", icon: <Clapperboard /> },
           { to: "/review", label: `Review${due ? ` (${due})` : ""}`, icon: <Brain /> },
           { to: "/baca", label: "Baca", icon: <LibraryBig /> },
-          aiOn ? { to: "/sensei", label: "Sensei", icon: <Bot /> } : { to: "/kosakata", label: "Kosakata", icon: <Layers /> },
+          { to: "/terjemah", label: "Terjemah", icon: <Languages /> },
         ].map((it) => (
           <NavLink key={it.to} to={it.to} className={({ isActive }) => (isActive ? "active" : "")}>
             {it.icon}

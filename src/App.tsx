@@ -35,12 +35,8 @@ const Watch = lazy(() => import("./pages/Watch.tsx"));
 const Library = lazy(() => import("./pages/Library.tsx"));
 const Reader = lazy(() => import("./pages/Reader.tsx"));
 const FreeReader = lazy(() => import("./pages/FreeReader.tsx"));
-const Vocab = lazy(() => import("./pages/Vocab.tsx"));
-const KanjiPage = lazy(() => import("./pages/Kanji.tsx"));
-const Grammar = lazy(() => import("./pages/Grammar.tsx"));
-const Quiz = lazy(() => import("./pages/Quiz.tsx"));
 const Review = lazy(() => import("./pages/Review.tsx"));
-const Sensei = lazy(() => import("./pages/Sensei.tsx"));
+const Translator = lazy(() => import("./pages/Translator.tsx"));
 const Collection = lazy(() => import("./pages/Collection.tsx"));
 const Log = lazy(() => import("./pages/Log.tsx"));
 const SettingsPage = lazy(() => import("./pages/Settings.tsx"));
@@ -86,12 +82,8 @@ export function App() {
               <Route path="/baca" element={<Library />} />
               <Route path="/baca/:id" element={<Reader />} />
               <Route path="/pembaca" element={<FreeReader />} />
-              <Route path="/kosakata" element={<Vocab />} />
-              <Route path="/kanji" element={<KanjiPage />} />
-              <Route path="/tata-bahasa" element={<Grammar />} />
-              <Route path="/kuis" element={<Quiz />} />
               <Route path="/review" element={<Review />} />
-              <Route path="/sensei" element={<Sensei />} />
+              <Route path="/terjemah" element={<Translator />} />
               <Route path="/koleksi" element={<Collection />} />
               <Route path="/log" element={<Log />} />
               <Route path="/pengaturan" element={<SettingsPage />} />

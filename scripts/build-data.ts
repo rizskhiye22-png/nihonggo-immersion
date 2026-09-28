@@ -1,15 +1,13 @@
 // Membangun seluruh data statis THE MARS ke public/ :
 //  - kamus terbagi (JMdict via kotobako-data, CC BY-SA 4.0)
-//  - daftar kosakata JLPT N5–N1 & kanji per level
-//  - cerita & tata bahasa yang sudah ditokenisasi (kuromoji) lengkap dengan furigana
+//  - cerita yang sudah ditokenisasi (kuromoji) lengkap dengan furigana
 //  - salinan kuromoji + kamusnya untuk tokenisasi di browser (Pembaca Bebas & Studio Tonton)
 import fs from "node:fs";
 import path from "node:path";
 import kuromoji from "kuromoji";
-import { groupTokens, dictKey, shardOf, kataToHira, isKanji, type RawToken, type Word } from "../src/lib/japanese.ts";
-import type { DictEntry, Level, Kanji } from "../src/lib/types.ts";
+import { groupTokens, dictKey, shardOf, kataToHira, type RawToken, type Word } from "../src/lib/japanese.ts";
+import type { DictEntry, Level } from "../src/lib/types.ts";
 import { stories } from "../content/stories.ts";
-import { grammar } from "../content/grammar.ts";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
 const OUT = path.join(ROOT, "public");
@@ -23,8 +21,7 @@ const write = (rel: string, data: unknown) => {
 
 // ───────────────── 1. Kamus ─────────────────
 type KVocab = { id: string; word: string; altWord: string | null; reading: string; meanings: string[]; pos: string; jlpt: string | null };
-type KKanji = { char: string; meanings: string[]; onyomi: string[]; kunyomi: string[]; strokeCount: number; grade: number | null; jlpt: string | null; strokes?: string[] };
-const kotobako = JSON.parse(fs.readFileSync(path.join(ROOT, "node_modules/kotobako-data/kotobako-static.json"), "utf8")) as { datasets: { vocab: KVocab[]; kanji: KKanji[] } };
+const kotobako = JSON.parse(fs.readFileSync(path.join(ROOT, "node_modules/kotobako-data/kotobako-static.json"), "utf8")) as { datasets: { vocab: KVocab[] } };
 
 const lv = (s: string | null | undefined): Level | undefined => (s && /^N[1-5]$/.test(s) ? (Number(s[1]) as Level) : undefined);
 
@@ -110,49 +107,6 @@ function lookup(...keys: string[]): DictEntry | undefined {
   return undefined;
 }
 
-// ───────────────── 2. Daftar JLPT & kanji ─────────────────
-const levelCounts: Record<string, number> = {};
-for (const l of [5, 4, 3, 2, 1] as Level[]) {
-  const list = entries
-    .filter((e) => e.j === l)
-    .sort((a, b) => (sylOrder.get(String(a.i)) ?? 1e9) - (sylOrder.get(String(b.i)) ?? 1e9) || a.i - b.i)
-    .map((e) => ({ i: e.i, w: e.w, r: e.r, m: e.m.slice(0, 3), p: e.p }));
-  levelCounts[`n${l}`] = list.length;
-  write(`data/jlpt/n${l}.json`, list);
-}
-
-// Data kanji memakai level JLPT lama (4 level): level 2 lama = N3 + N2.
-const kanjiGroups: Record<string, Level[]> = { n5: [5], n4: [4], n3: [3, 2], n1: [1] };
-const kanjiOld: Record<string, string> = { N5: "n5", N4: "n4", N3: "n3", N2: "n3", N1: "n1" };
-const kanjiCounts: Record<string, number> = {};
-{
-  const vocabForKanji = new Map<string, DictEntry[]>();
-  for (const e of entries) {
-    if (!e.j) continue;
-    for (const ch of new Set([...e.w].filter(isKanji))) {
-      const arr = vocabForKanji.get(ch) ?? [];
-      arr.push(e);
-      vocabForKanji.set(ch, arr);
-    }
-  }
-  const groups: Record<string, (Kanji & { x: [string, string, string][] })[]> = {};
-  for (const k of kotobako.datasets.kanji) {
-    const g = k.jlpt ? kanjiOld[k.jlpt] : undefined;
-    if (!g) continue;
-    const ex = (vocabForKanji.get(k.char) ?? [])
-      .sort((a, b) => (b.j ?? 0) - (a.j ?? 0) || (sylOrder.get(String(a.i)) ?? 1e9) - (sylOrder.get(String(b.i)) ?? 1e9))
-      .slice(0, 6)
-      .map((e) => [e.w, e.r, e.m[0]] as [string, string, string]);
-    const item = { c: k.char, m: k.meanings.slice(0, 4), on: k.onyomi, kun: k.kunyomi, n: k.strokeCount, g: k.grade ?? undefined, s: k.strokes, x: ex };
-    (groups[g] ??= []).push(item);
-  }
-  for (const g of Object.keys(kanjiGroups)) {
-    const list = (groups[g] ?? []).sort((a, b) => (a.g ?? 99) - (b.g ?? 99) || a.n - b.n);
-    kanjiCounts[g] = list.length;
-    write(`data/kanji/${g}.json`, list);
-  }
-}
-
 // ───────────────── 3. Tokenisasi konten ─────────────────
 const tokenizer = await new Promise<kuromoji.Tokenizer<kuromoji.IpadicFeatures>>((resolve, reject) =>
   kuromoji.builder({ dicPath: path.join(ROOT, "node_modules/kuromoji/dict") }).build((err, t) => (err ? reject(err) : resolve(t))),
@@ -185,18 +139,7 @@ const storyIndex = stories.map((s) => {
 });
 write("data/stories/index.json", storyIndex);
 
-const grammarOut = grammar.map((g) => ({
-  ...g,
-  examples: g.examples.map(([marked, id]) => {
-    const start = marked.indexOf("[[");
-    const end = marked.indexOf("]]");
-    const ja = marked.replace("[[", "").replace("]]", "");
-    const ex: { ja: string; id: string; w: Word[]; blank?: [number, number] } = { ja, id, w: analyse(ja) };
-    if (start >= 0 && end > start) ex.blank = [start, end - 2];
-    return ex;
-  }),
-}));
-write("data/grammar.json", grammarOut);
+
 
 // ───────────────── 4. Kuromoji untuk browser ─────────────────
 {
@@ -213,9 +156,6 @@ write("data/grammar.json", grammarOut);
   fs.cpSync(path.join(ROOT, "node_modules/kuromoji/dict"), path.join(OUT, "dict/kuromoji"), { recursive: true });
 }
 
-write("data/stats.json", { vocab: levelCounts, kanji: kanjiCounts, dictionary: entries.length, stories: stories.length, grammar: grammar.length });
-console.log(
-  `✓ Data THE MARS siap dalam ${((Date.now() - t0) / 1000).toFixed(1)} dtk —`,
-  `${entries.length} entri kamus, JLPT ${JSON.stringify(levelCounts)}, kanji ${JSON.stringify(kanjiCounts)},`,
-  `${stories.length} cerita, ${grammar.length} pola tata bahasa`,
-);
+for (const old of ["data/jlpt", "data/kanji", "data/grammar.json"]) fs.rmSync(path.join(OUT, old), { recursive: true, force: true });
+write("data/stats.json", { dictionary: entries.length, stories: stories.length });
+console.log(`✓ Data THE MARS siap dalam ${((Date.now() - t0) / 1000).toFixed(1)} dtk — ${entries.length} entri kamus, ${stories.length} cerita`);

@@ -2,34 +2,25 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, ty
 import { Link } from "react-router-dom";
 import {
   AudioLines, Captions, ChevronLeft, ChevronRight, Clapperboard, Download, EyeOff, FileVideo, Film, Info, Keyboard, Languages, Maximize,
-  Mic, Minus, MonitorPlay, Pause, Pickaxe, Play, Plus, Repeat1, Sparkles, Square, Upload, Wand2,
+  Mic, Minus, MonitorPlay, Pause, Pickaxe, Play, Plus, Repeat1, Square, Upload,
 } from "lucide-react";
 import { JapaneseText } from "../components/JapaneseText.tsx";
 import { LineVocab } from "../components/LineVocab.tsx";
-import { AiText } from "../components/AiText.tsx";
-import { Bar, Modal, Seg, Spinner, Switch, toast } from "../components/ui.tsx";
+import { Modal, Seg, Switch, toast } from "../components/ui.tsx";
 import { cueAt, cueBefore, fmtTime, parseSubtitles, type Cue } from "../lib/subtitles.ts";
 import { analyse, preloadTokenizer } from "../lib/tokenizer.ts";
 import { createYouTubePlayer, parseYouTubeId, videoElementPlayer, type PlayerApi } from "../lib/player.ts";
 import { addLog, setState, useStore } from "../lib/store.ts";
 import { captureFrame, getImage } from "../lib/idb.ts";
-import { streamAi } from "../lib/ai.ts";
-import { useAiEnabled } from "../lib/aiStatus.ts";
-import { translate } from "../lib/translate.ts";
-import { ASR_MODELS, canCaptureTab, cleanChunks, decodeTo16k, LiveCapture, loadAsr, transcribe, transcribeFile, type AsrChunk } from "../lib/asr.ts";
+import { translate, translatorSupported } from "../lib/translate.ts";
+import { audioTrackFromTab, audioTrackFromVideo, canShareTab, LiveSpeech, speechSupported, type SpeechCue } from "../lib/speech.ts";
 import { isJapanese, type Word } from "../lib/japanese.ts";
 
 type Source = { kind: "yt"; id: string } | { kind: "file"; url: string; name: string; file: File };
 type Saved = { yt?: string; title?: string; subs?: string; subsName?: string; tr?: string; trName?: string; offset?: number };
-type AsrState =
-  | { phase: "idle" }
-  | { phase: "loading"; progress: number; text: string }
-  | { phase: "live"; device: string; lines: number }
-  | { phase: "file"; device: string; done: number; total: number }
-  | { phase: "error"; message: string };
+type AsrState = { phase: "idle" } | { phase: "live"; via: "tab" | "video" | "mic"; lines: number } | { phase: "error"; message: string };
 
 const SAVE_KEY = "themars:studio";
-const MODEL_KEY = "themars:asr-model";
 const autoKey = (id: string) => `themars:auto-subs:${id}`;
 
 const loadSaved = (): Saved => {
@@ -57,7 +48,7 @@ const toSrt = (cues: Cue[]) => {
 };
 
 /** Gabungkan cue baru (urut waktu) dan beri ulang nomor indeks. */
-const mergeCues = (prev: Cue[], add: AsrChunk[]) =>
+const mergeCues = (prev: Cue[], add: SpeechCue[]) =>
   [...prev, ...add.map((c) => ({ i: 0, start: c.start, end: Math.max(c.end, c.start + 0.8), text: c.text }))]
     .sort((a, b) => a.start - b.start)
     .map((c, i) => ({ ...c, i }));
@@ -68,7 +59,6 @@ export default function Studio() {
   const autoPauseSetting = useStore((s) => s.settings.autoPause);
   const furigana = useStore((s) => s.settings.furigana);
   const allCards = useStore((s) => s.cards);
-  const aiOn = useAiEnabled();
 
   const [source, setSource] = useState<Source | null>(saved.yt ? { kind: "yt", id: saved.yt } : null);
   const [title, setTitle] = useState(saved.title ?? "");
@@ -90,8 +80,7 @@ export default function Studio() {
   const [showVocab, setShowVocab] = useState(true);
   const [words, setWords] = useState<Record<string, Word[]>>({});
   const [trMap, setTrMap] = useState<Record<string, string>>({});
-  const [tab, setTab] = useState<"transkrip" | "tambang" | "ai">("transkrip");
-  const [ai, setAi] = useState<{ text: string; busy: boolean; error?: string; line?: string } | null>(null);
+  const [tab, setTab] = useState<"transkrip" | "tambang">("transkrip");
   const [ytInput, setYtInput] = useState("");
   const [pasteOpen, setPasteOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
@@ -99,16 +88,15 @@ export default function Studio() {
   const [drag, setDrag] = useState(false);
   const [manual, setManual] = useState<{ text: string; words?: Word[] }>({ text: "" });
   const [isFs, setIsFs] = useState(false);
-  const [model, setModel] = useState(() => localStorage.getItem(MODEL_KEY) ?? ASR_MODELS[0].id);
   const [asr, setAsr] = useState<AsrState>({ phase: "idle" });
+  const [interim, setInterim] = useState("");
 
   const playerRef = useRef<PlayerApi | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const ytHostRef = useRef<HTMLDivElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const transcriptRef = useRef<HTMLDivElement>(null);
-  const captureRef = useRef<LiveCapture | null>(null);
-  const stopFileRef = useRef(false);
+  const speechRef = useRef<LiveSpeech | null>(null);
   const live = useRef({ cues, offset, autoPause, liveMode: false, shown: -1, lastIdx: -1, pausedAt: -1, watched: 0, title });
   live.current.cues = cues;
   live.current.offset = offset;
@@ -148,7 +136,15 @@ export default function Studio() {
       last = now;
       const p = playerRef.current;
       const L = live.current;
-      if (!p) return;
+      if (!p) {
+        // Mode mikrofon tanpa video: tampilkan baris terbaru yang dikenali
+        const last = L.liveMode ? L.cues.length - 1 : -1;
+        if (last !== L.shown) {
+          L.shown = last;
+          setShown(last);
+        }
+        return;
+      }
       const isPaused = p.paused();
       setPaused(isPaused);
       if (!isPaused) L.watched += dt;
@@ -187,8 +183,7 @@ export default function Studio() {
     return () => {
       clearInterval(id);
       flush(20);
-      captureRef.current?.stop();
-      stopFileRef.current = true;
+      speechRef.current?.stop();
     };
   }, []);
 
@@ -397,104 +392,55 @@ export default function Studio() {
     [source],
   );
 
-  async function prepareModel() {
-    setAsr({ phase: "loading", progress: 0, text: "Menyiapkan pengenal suara…" });
-    // Hentikan bila unduhan tidak bergerak selama 60 detik (koneksi terputus/diblokir)
-    let lastActivity = Date.now();
-    let timer = 0;
-    const stalled = new Promise<never>((_, reject) => {
-      timer = window.setInterval(() => {
-        if (Date.now() - lastActivity > 60_000) reject(new Error("Model pengenal suara gagal diunduh. Periksa koneksi internet lalu coba lagi."));
-      }, 2000);
-    });
-    try {
-      return await Promise.race([
-        loadAsr(model, (p) => {
-          lastActivity = Date.now();
-          if (p.status === "progress_total" || (p.status === "progress" && p.total && p.total > 5_000_000)) {
-            setAsr({ phase: "loading", progress: p.progress ?? 0, text: `Mengunduh model (sekali saja)… ${Math.round(p.progress ?? 0)}%` });
-          }
-        }),
-        stalled,
-      ]);
-    } finally {
-      clearInterval(timer);
-    }
-  }
-
-  const onResult = useCallback(
-    (chunks: AsrChunk[]) => {
-      const clean = cleanChunks(chunks);
-      if (!clean.length) return;
+  const onFinal = useCallback(
+    (cue: SpeechCue) => {
       setCues((prevCues) => {
-        const merged = mergeCues(prevCues, clean);
+        const merged = mergeCues(prevCues, [cue]);
         persistAuto(merged);
         return merged;
       });
+      setAsr((a) => (a.phase === "live" ? { ...a, lines: a.lines + 1 } : a));
     },
     [persistAuto],
   );
 
-  async function startLive() {
-    if (!source) return toast("Putar video dulu");
+  async function startListening(via: "tab" | "video" | "mic") {
+    if (!speechSupported()) {
+      setAsr({ phase: "error", message: "Browser ini belum mendukung pengenal suara. Gunakan Chrome, Edge, atau Safari terbaru." });
+      return;
+    }
     if (cues.length && !confirm("Subtitle yang ada akan diganti subtitle otomatis. Lanjutkan?")) return;
     setTabHelp(false);
     setCues([]);
     resetLines();
     try {
-      const device = await prepareModel();
-      const cap = new LiveCapture(
-        () => playerRef.current?.time() ?? 0,
-        (seg) => {
-          void transcribe(seg.audio, seg.start).then(onResult, (e: Error) => toast(e.message));
-        },
-        () => setAsr({ phase: "idle" }),
-      );
-      if (source.kind === "yt") await cap.fromTab();
-      else if (videoRef.current) await cap.fromElement(videoRef.current);
-      captureRef.current = cap;
+      const t0 = performance.now();
+      let track: MediaStreamTrack | undefined;
+      if (via === "tab") track = await audioTrackFromTab();
+      else if (via === "video" && videoRef.current) track = audioTrackFromVideo(videoRef.current);
+      const sp = new LiveSpeech({
+        getTime: () => playerRef.current?.time() ?? (performance.now() - t0) / 1000,
+        onInterim: setInterim,
+        onFinal,
+        onError: (message) => setAsr({ phase: "error", message }),
+        onStop: () => setAsr((a) => (a.phase === "live" ? { phase: "idle" } : a)),
+      });
+      sp.start(track);
+      speechRef.current = sp;
       setAutoPause(false);
-      setAsr({ phase: "live", device, lines: 0 });
+      setAsr({ phase: "live", via, lines: 0 });
       playerRef.current?.play();
-      toast("Mendengarkan… subtitle akan muncul beberapa detik setelah suara");
+      toast("Mendengarkan… teks muncul saat kalimat diucapkan");
     } catch (e) {
       const msg = (e as Error).name === "NotAllowedError" ? "Izin berbagi audio ditolak." : (e as Error).message;
       setAsr({ phase: "error", message: msg });
     }
   }
 
-  async function transcribeWholeFile() {
-    if (source?.kind !== "file") return;
-    if (cues.length && !confirm("Subtitle yang ada akan diganti subtitle otomatis. Lanjutkan?")) return;
-    setCues([]);
-    resetLines();
-    stopFileRef.current = false;
-    try {
-      const device = await prepareModel();
-      setAsr({ phase: "file", device, done: 0, total: 0 });
-      let audio: Float32Array;
-      try {
-        audio = await decodeTo16k(source.file);
-      } catch {
-        setAsr({ phase: "idle" });
-        toast("Format audio file ini tidak bisa dibaca langsung — beralih ke mode dengar langsung");
-        return startLive();
-      }
-      await transcribeFile(audio, (chunks, done, total) => {
-        onResult(chunks);
-        setAsr({ phase: "file", device, done, total });
-      }, () => stopFileRef.current);
-      setAsr({ phase: "idle" });
-      toast("Subtitle otomatis selesai dibuat");
-    } catch (e) {
-      setAsr({ phase: "error", message: (e as Error).message });
-    }
-  }
-
   function stopAsr() {
-    captureRef.current?.stop();
-    captureRef.current = null;
-    stopFileRef.current = true;
+    speechRef.current?.stop();
+    speechRef.current = null;
+    setInterim("");
     setAsr({ phase: "idle" });
   }
 
@@ -507,16 +453,7 @@ export default function Studio() {
     URL.revokeObjectURL(a.href);
   };
 
-  async function explainLine(text: string) {
-    setTab("ai");
-    setAi({ text: "", busy: true, line: text });
-    try {
-      await streamAi("explain", { sentence: text, level }, (t) => setAi({ text: t, busy: true, line: text }));
-      setAi((a) => (a ? { ...a, busy: false } : a));
-    } catch (e) {
-      setAi({ text: "", busy: false, error: (e as Error).message, line: text });
-    }
-  }
+
 
   const srcLabel = title || "Studio Tonton";
   const sessionCards = useMemo(
@@ -543,7 +480,7 @@ export default function Studio() {
   );
 
   const lineWords = cue ? words[cue.text] : undefined;
-  const busy = asr.phase === "live" || asr.phase === "file" || asr.phase === "loading";
+  const busy = asr.phase === "live";
 
   return (
     <div
@@ -611,54 +548,43 @@ export default function Studio() {
           <div className="grow" style={{ minWidth: 220 }}>
             <strong>Subtitle otomatis dari suara</strong>
             <div className="muted" style={{ fontSize: "0.84rem" }}>
-              Gratis, tanpa API key. Pengenal suara berjalan di browsermu (Chrome/Edge desktop disarankan).
+              Memakai pengenal suara bawaan browser: ringan, gratis, tanpa unduhan model. Terbaik di Chrome/Edge.
             </div>
           </div>
-          <Seg
-            value={model}
-            onChange={(m) => { setModel(m); localStorage.setItem(MODEL_KEY, m); }}
-            options={ASR_MODELS.map((m) => ({ v: m.id, label: `${m.label} · ${m.size}` }))}
-          />
           {busy ? (
             <button className="btn" onClick={stopAsr}><Square /> Berhenti</button>
           ) : (
             <>
-              {source?.kind === "file" && <button className="btn primary" onClick={transcribeWholeFile}><Wand2 /> Buat subtitle dari file</button>}
-              <button
-                className={`btn${source?.kind === "file" ? "" : " primary"}`}
-                disabled={!source || (source.kind === "yt" && !canCaptureTab())}
-                onClick={() => (source?.kind === "yt" ? setTabHelp(true) : startLive())}
-              >
-                <Mic /> {source?.kind === "yt" ? "Dengarkan audio YouTube" : "Dengar sambil menonton"}
+              {source?.kind === "yt" && canShareTab() && (
+                <button className="btn primary" onClick={() => setTabHelp(true)}><MonitorPlay /> Dengarkan audio YouTube</button>
+              )}
+              {source?.kind === "file" && (
+                <button className="btn primary" onClick={() => startListening("video")}><MonitorPlay /> Dengarkan video ini</button>
+              )}
+              <button className="btn" onClick={() => startListening("mic")} title="Untuk HP, atau video yang diputar di TV/laptop lain">
+                <Mic /> Mikrofon
               </button>
             </>
           )}
           {cues.length > 0 && <button className="btn icon" title="Unduh subtitle (.srt)" onClick={downloadSrt}><Download /></button>}
         </div>
-        {asr.phase === "loading" && (
-          <div style={{ marginTop: 12 }}>
-            <div className="row" style={{ fontSize: "0.84rem", marginBottom: 6 }}><Spinner /> {asr.text}</div>
-            <Bar value={asr.progress} max={100} />
-          </div>
-        )}
         {asr.phase === "live" && (
           <div className="callout" style={{ marginTop: 12 }}>
             <span className="rec-dot" />
             <div>
-              <strong>Mendengarkan audio…</strong> ({asr.device === "webgpu" ? "GPU" : "CPU"}) Subtitle muncul ±2–6 detik setelah kalimat diucapkan dan tersimpan otomatis.
-              Putar ulang video untuk belajar dengan subtitle yang sudah sinkron.
+              <strong>Mendengarkan{asr.via === "mic" ? " lewat mikrofon" : ""}…</strong> {asr.lines} baris tersimpan.
+              {asr.via === "mic" ? " Dekatkan perangkat ke sumber suara." : " Jika teks tidak muncul, keraskan suara video atau pakai tombol Mikrofon."}
+              {" "}Setelah selesai, putar ulang video untuk belajar dengan subtitle yang sudah sinkron.
             </div>
-          </div>
-        )}
-        {asr.phase === "file" && (
-          <div style={{ marginTop: 12 }}>
-            <div className="row" style={{ fontSize: "0.84rem", marginBottom: 6 }}>
-              <Spinner /> Membuat subtitle ({asr.device === "webgpu" ? "GPU" : "CPU"})… {fmtTime(asr.done)} / {fmtTime(asr.total || 0)}
-            </div>
-            <Bar value={asr.done} max={asr.total || 1} />
           </div>
         )}
         {asr.phase === "error" && <div className="callout mars" style={{ marginTop: 12 }}><Info /><div>{asr.message}</div></div>}
+        {!translatorSupported() && (
+          <div className="callout" style={{ marginTop: 12 }}>
+            <Languages />
+            <div>Terjemahan Indonesia otomatis memakai penerjemah lokal bawaan <strong>Chrome/Edge desktop</strong>. Di browser ini, arti kata tampil dalam bahasa Inggris.</div>
+          </div>
+        )}
       </div>
 
       {drag && (
@@ -686,7 +612,12 @@ export default function Studio() {
                 </div>
               </div>
             )}
-            {cue && (
+            {asr.phase === "live" && interim && (
+              <div className="sub-overlay">
+                <div className="sub-box"><span className="jt xl interim">{interim}</span></div>
+              </div>
+            )}
+            {cue && !(asr.phase === "live" && interim) && (
               <div className="sub-overlay">
                 <div className="sub-box" style={{ whiteSpace: "pre-line" }}>
                   {lineWords ? <JapaneseText words={lineWords} size="xl" context={popupCtx} className="pre" /> : <span className="jt xl pre">{cue.text}</span>}
@@ -743,7 +674,6 @@ export default function Studio() {
               <div className="stack" style={{ gap: 10 }}>
                 <div className="row between wrap">
                   <span className="badge mono">{fmtTime(cue.start)} · baris {shown + 1}/{cues.length}</span>
-                  {aiOn && <button className="btn sm" onClick={() => explainLine(cue.text)}><Sparkles /> Analisis kalimat (AI)</button>}
                 </div>
                 <div style={{ whiteSpace: "pre-line" }}>
                   {lineWords ? <JapaneseText words={lineWords} size="lg" context={popupCtx} /> : <span className="jt lg">{cue.text}</span>}
@@ -783,7 +713,6 @@ export default function Studio() {
           <div className="tabs" style={{ marginBottom: 12 }}>
             <button className={tab === "transkrip" ? "on" : ""} onClick={() => setTab("transkrip")}>Transkrip</button>
             <button className={tab === "tambang" ? "on" : ""} onClick={() => setTab("tambang")}>Tambang ({sessionCards.length})</button>
-            {aiOn && <button className={tab === "ai" ? "on" : ""} onClick={() => setTab("ai")}>Analisis AI</button>}
           </div>
           {tab === "transkrip" && (
             <div className="transcript" ref={transcriptRef}>
@@ -815,17 +744,6 @@ export default function Studio() {
               ))}
             </div>
           )}
-          {tab === "ai" && aiOn && (
-            <div className="transcript">
-              {!ai && <p className="muted" style={{ padding: 10 }}>Tekan “Analisis kalimat (AI)” untuk penjelasan tata bahasa dan nuansa dalam Bahasa Indonesia.</p>}
-              {ai && (
-                <div className="stack" style={{ gap: 10, padding: 4 }}>
-                  {ai.line && <div className="jp" style={{ fontSize: "1.1rem", padding: 10, background: "var(--surface-2)", borderRadius: 12 }}>{ai.line}</div>}
-                  {ai.error ? <p style={{ color: "var(--danger)" }}>{ai.error}</p> : <AiText text={ai.text || "…"} streaming={ai.busy} />}
-                </div>
-              )}
-            </div>
-          )}
           <div className="row wrap" style={{ gap: 6, marginTop: 12, fontSize: "0.72rem", color: "var(--muted)" }}>
             <Keyboard style={{ width: 14 }} />
             <span className="kbd">Spasi</span> putar <span className="kbd">A</span><span className="kbd">D</span> baris <span className="kbd">S</span> ulangi <span className="kbd">F</span> layar penuh
@@ -835,7 +753,7 @@ export default function Studio() {
 
       {pasteOpen && <PasteSubs onClose={() => setPasteOpen(false)} onLoad={(t) => { loadSubsText(t, "tempel.srt"); setPasteOpen(false); }} />}
       {helpOpen && <StudioHelp onClose={() => setHelpOpen(false)} />}
-      {tabHelp && <TabCaptureHelp onClose={() => setTabHelp(false)} onStart={startLive} modelLabel={ASR_MODELS.find((m) => m.id === model)!} />}
+      {tabHelp && <TabCaptureHelp onClose={() => setTabHelp(false)} onStart={() => startListening("tab")} />}
     </div>
   );
 }
@@ -848,7 +766,7 @@ function Thumb({ id }: { id?: string }) {
   return src ? <img src={src} alt="" /> : <div className="ph" />;
 }
 
-function TabCaptureHelp({ onClose, onStart, modelLabel }: { onClose: () => void; onStart: () => void; modelLabel: { label: string; size: string } }) {
+function TabCaptureHelp({ onClose, onStart }: { onClose: () => void; onStart: () => void }) {
   return (
     <Modal onClose={onClose}>
       <div className="eyebrow"><Mic style={{ width: 14 }} /> Subtitle otomatis YouTube</div>
@@ -862,9 +780,8 @@ function TabCaptureHelp({ onClose, onStart, modelLabel }: { onClose: () => void;
       <div className="callout" style={{ marginTop: 10 }}>
         <Info />
         <div>
-          Pertama kali, model pengenal suara <strong>{modelLabel.label} ({modelLabel.size})</strong> diunduh sekali lalu tersimpan di browser.
-          Semua proses berjalan di perangkatmu — gratis, tanpa API key, dan audio tidak dikirim ke server mana pun.
-          Berfungsi paling baik di Chrome/Edge versi desktop.
+          Suara diubah menjadi teks oleh pengenal suara bawaan browser — tidak ada model yang diunduh dan tidak ada server THE MARS.
+          Jika browser belum mendukung audio tab, THE MARS otomatis mendengarkan lewat mikrofon (pastikan speaker cukup keras).
         </div>
       </div>
       <div className="btn-row" style={{ justifyContent: "flex-end", marginTop: 18 }}>
@@ -898,7 +815,7 @@ function StudioHelp({ onClose }: { onClose: () => void }) {
       <div className="grid c2" style={{ marginTop: 16 }}>
         {[
           ["1. Pilih tontonan", "Anime, drama, film, atau video YouTube berbahasa Jepang yang kamu suka. Lihat Rekomendasi Tontonan sesuai levelmu."],
-          ["2. Subtitle otomatis", "Tidak punya subtitle? Tekan “Dengarkan audio YouTube” atau “Buat subtitle dari file”. Suara diubah menjadi teks Jepang di browsermu, gratis."],
+          ["2. Subtitle otomatis", "Tidak punya subtitle? Tekan “Dengarkan audio YouTube” atau “Buat subtitle dari file”. Di HP, atau saat menonton di TV, pakai tombol “Mikrofon”. Suara diubah menjadi teks Jepang di browsermu, gratis."],
           ["3. Kata + arti Indonesia", "Setiap baris menampilkan daftar kata, cara baca, dan artinya dalam Bahasa Indonesia secara otomatis, mirip kamus pop-up Yomitan."],
           ["4. Mode intensif", "Aktifkan “Jeda tiap baris”: setiap baris berhenti otomatis. Baca, dengarkan ulang (S), lalu tirukan (shadowing)."],
           ["5. Mode dengar", "Samarkan subtitle dan intip hanya saat perlu. Latihan terbaik untuk choukai JLPT."],

@@ -1,17 +1,14 @@
 import { createPortal } from "react-dom";
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { BookmarkPlus, Check, ExternalLink, Sparkles, Volume2, X } from "lucide-react";
+import { BookmarkPlus, Check, ExternalLink, Languages, Volume2, X } from "lucide-react";
 import type { Word } from "../lib/japanese.ts";
 import type { DictEntry, Level } from "../lib/types.ts";
 import { lookup, wordKey } from "../lib/dict.ts";
 import { setWordStatus, useStore } from "../lib/store.ts";
 import { addCard, hasCard } from "../lib/srs.ts";
 import { speak } from "../lib/tts.ts";
-import { streamAi } from "../lib/ai.ts";
-import { useAiEnabled } from "../lib/aiStatus.ts";
-import { meaningId } from "../lib/translate.ts";
+import { meaningId, translate } from "../lib/translate.ts";
 import { putImage } from "../lib/idb.ts";
-import { AiText } from "./AiText.tsx";
 import { LevelBadge, toast } from "./ui.tsx";
 
 export type PopupContext = {
@@ -52,12 +49,11 @@ function Popup({ word, rect, ctx, onClose }: Open & { onClose: () => void }) {
   const ref = useRef<HTMLDivElement>(null);
   const [entries, setEntries] = useState<DictEntry[] | null>(null);
   const [pos, setPos] = useState({ top: rect.bottom + 10, left: rect.left });
-  const [ai, setAi] = useState<{ text: string; busy: boolean; error?: string } | null>(null);
+  const [sentTr, setSentTr] = useState<string | null>(null);
   const key = wordKey(word);
   const status = useStore((s) => s.words[key]?.s);
   const cards = useStore((s) => s.cards);
   const inDeck = useMemo(() => Object.values(cards).some((c) => c.key === key), [cards, key]);
-  const aiOn = useAiEnabled();
   const [autoId, setAutoId] = useState<string>();
   const idMeaning = ctx?.idMeanings?.[word.b] ?? ctx?.idMeanings?.[word.s] ?? autoId;
 
@@ -87,7 +83,7 @@ function Popup({ word, rect, ctx, onClose }: Open & { onClose: () => void }) {
     if (top + h > window.innerHeight - 12) top = Math.max(12, rect.top - h - 10);
     const left = Math.min(Math.max(12, rect.left + rect.width / 2 - w / 2), window.innerWidth - w - 12);
     setPos({ top, left });
-  }, [rect, entries, ai]);
+  }, [rect, entries, sentTr]);
 
   useEffect(() => {
     const onDown = (e: MouseEvent) => {
@@ -138,17 +134,14 @@ function Popup({ word, rect, ctx, onClose }: Open & { onClose: () => void }) {
     toast(`「${main?.w ?? word.b}」 masuk ke review`);
   }
 
-  async function explain() {
-    setAi({ text: "", busy: true });
+  async function translateSentence() {
+    if (!ctx?.ja) return;
+    setSentTr("…");
     try {
-      await streamAi(
-        "explain",
-        { word: word.b, surface: word.s, sentence: ctx?.ja ?? word.s, level: ctx?.level ?? main?.j },
-        (text) => setAi({ text, busy: true }),
-      );
-      setAi((a) => (a ? { ...a, busy: false } : a));
+      setSentTr(await translate(ctx.ja));
     } catch (e) {
-      setAi({ text: "", busy: false, error: (e as Error).message });
+      setSentTr(null);
+      toast((e as Error).message);
     }
   }
 
@@ -179,7 +172,7 @@ function Popup({ word, rect, ctx, onClose }: Open & { onClose: () => void }) {
           <div className="skeleton" style={{ height: 14, width: "50%" }} />
         </div>
       ) : entries.length === 0 ? (
-        <p className="muted" style={{ marginTop: 12 }}>Tidak ditemukan di kamus. Coba tanya Sensei AI.</p>
+        <p className="muted" style={{ marginTop: 12 }}>Tidak ditemukan di kamus. Mungkin nama orang/tempat atau ungkapan khusus.</p>
       ) : (
         <div style={{ marginTop: 12 }}>
           {entries.map((e, idx) => (
@@ -199,9 +192,10 @@ function Popup({ word, rect, ctx, onClose }: Open & { onClose: () => void }) {
         </div>
       )}
 
-      {ai && (
-        <div className="card" style={{ marginTop: 14, padding: 14, background: "var(--bg-2)" }}>
-          {ai.error ? <p style={{ color: "var(--danger)", margin: 0 }}>{ai.error}</p> : <AiText text={ai.text || "…"} streaming={ai.busy} />}
+      {ctx?.ja && (ctx.tr || sentTr) && (
+        <div className="card" style={{ marginTop: 14, padding: 12, background: "var(--bg-2)" }}>
+          <div className="jp" style={{ fontSize: "0.95rem" }}>{ctx.ja}</div>
+          <div className="tr">🇮🇩 {ctx.tr ?? sentTr}</div>
         </div>
       )}
 
@@ -212,11 +206,9 @@ function Popup({ word, rect, ctx, onClose }: Open & { onClose: () => void }) {
         <button className={`btn sm${status === "known" ? " gold" : ""}`} onClick={() => setWordStatus(key, status === "known" ? null : "known")}>
           <Check /> {status === "known" ? "Dikuasai" : "Sudah tahu"}
         </button>
-        {aiOn && (
-          <button className="btn sm" onClick={explain} disabled={ai?.busy}>
-            <Sparkles /> Jelaskan (AI)
-          </button>
-        )}
+        <button className="btn sm" onClick={translateSentence} disabled={!ctx?.ja || !!ctx?.tr || !!sentTr}>
+          <Languages /> Arti kalimat
+        </button>
         <a className="btn sm" href={`https://jisho.org/search/${encodeURIComponent(main?.w ?? word.b)}`} target="_blank" rel="noreferrer">
           <ExternalLink /> Jisho
         </a>

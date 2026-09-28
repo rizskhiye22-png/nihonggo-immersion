@@ -1,13 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
-import { FileText, Languages, ScanText, Sparkles, Trash2, Wand2 } from "lucide-react";
+import { FileText, Languages, ScanText, Trash2 } from "lucide-react";
 import { analyseMany, splitSentences, tokenizerStatus } from "../lib/tokenizer.ts";
-import { generateStory } from "../lib/ai.ts";
-import { useAiEnabled } from "../lib/aiStatus.ts";
 import { translateMany } from "../lib/translate.ts";
 import { parseSubtitles } from "../lib/subtitles.ts";
 import { addLog, useStore } from "../lib/store.ts";
-import { LEVELS, type Level } from "../lib/types.ts";
 import type { Word } from "../lib/japanese.ts";
 import { SentenceList, PlayAllButton, type TrMode } from "../components/SentenceList.tsx";
 import { PageHead, Seg, Spinner, toast } from "../components/ui.tsx";
@@ -15,21 +11,14 @@ import { PageHead, Seg, Spinner, toast } from "../components/ui.tsx";
 type Sent = { ja: string; id?: string; w: Word[] };
 const KEY = "themars:reader";
 
-const TOPICS = ["Kehidupan sekolah", "Makanan Jepang", "Liburan musim panas", "Kerja paruh waktu", "Festival matsuri", "Misteri di kereta", "Teknologi & AI", "Persahabatan", "Kota Tokyo", "Kucing yang pintar"];
-
 export default function FreeReader() {
   const my = useStore((s) => s.profile.level);
-  const [params] = useSearchParams();
   const [text, setText] = useState(() => localStorage.getItem(KEY) ?? "");
   const [title, setTitle] = useState("Pembaca Bebas");
   const [sents, setSents] = useState<Sent[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [tr, setTr] = useState<TrMode>("blur");
   const [playAll, setPlayAll] = useState(false);
-  const aiOn = useAiEnabled();
-  const [aiOpen, setAiOpen] = useState(params.get("ai") === "1");
-  const [aiLevel, setAiLevel] = useState<Level>(my);
-  const [topic, setTopic] = useState(TOPICS[0]);
   const [started, setStarted] = useState(0);
   const stopPlayAll = useCallback(() => setPlayAll(false), []);
 
@@ -70,21 +59,6 @@ export default function FreeReader() {
     setText(content);
   };
 
-  const makeStory = async () => {
-    setBusy(true);
-    try {
-      const story = await generateStory(aiLevel, topic);
-      setAiOpen(false);
-      setTr("blur");
-      await run(story.sentences, `Cerita AI: ${story.title}`);
-      setText(story.sentences.map((s) => s.ja).join("\n"));
-      toast(`Cerita "${story.titleId}" siap dibaca`);
-    } catch (e) {
-      toast((e as Error).message);
-      setBusy(false);
-    }
-  };
-
   const translateAll = async () => {
     if (!sents) return;
     setBusy(true);
@@ -111,23 +85,7 @@ export default function FreeReader() {
         title="Baca teks Jepang apa pun"
         lead="Tempel artikel NHK, lirik lagu, dialog game, transkrip podcast, atau subtitle. Setiap kata langsung bisa diklik, didengar, dan ditambang."
       >
-        {aiOn && <button className="btn primary" onClick={() => setAiOpen((v) => !v)}><Sparkles /> Buat cerita AI</button>}
       </PageHead>
-
-      {aiOn && aiOpen && (
-        <div className="card glow" style={{ marginBottom: 18 }}>
-          <div className="card-title"><Wand2 style={{ color: "var(--mars-2)" }} /><h3 className="grow">Generator cerita bertingkat</h3></div>
-          <p className="muted" style={{ marginTop: -6 }}>Sensei AI menulis cerita baru sesuai level JLPT-mu, lengkap dengan terjemahan Indonesia per kalimat.</p>
-          <div className="row wrap" style={{ gap: 12 }}>
-            <Seg value={aiLevel} onChange={setAiLevel} options={LEVELS.map((l) => ({ v: l, label: `N${l}` }))} />
-            <select className="select" style={{ maxWidth: 260 }} value={topic} onChange={(e) => setTopic(e.target.value)}>
-              {TOPICS.map((t) => <option key={t}>{t}</option>)}
-            </select>
-            <input className="input" style={{ maxWidth: 260 }} placeholder="…atau tulis topik sendiri" onChange={(e) => e.target.value && setTopic(e.target.value)} />
-            <button className="btn primary" onClick={makeStory} disabled={busy}>{busy ? <Spinner /> : <Sparkles />} Buat cerita</button>
-          </div>
-        </div>
-      )}
 
       <div className="card" style={{ marginBottom: 18 }}>
         <textarea

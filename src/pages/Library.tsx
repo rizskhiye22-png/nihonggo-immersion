@@ -1,18 +1,16 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { CheckCircle2, Clock, LibraryBig, ScanText, Sparkles } from "lucide-react";
+import { CheckCircle2, Clock, LibraryBig, ScanText } from "lucide-react";
 import { useStories } from "../lib/data.ts";
 import { useStore } from "../lib/store.ts";
 import { LEVELS, type Level } from "../lib/types.ts";
 import { LevelBadge, PageHead } from "../components/ui.tsx";
-import { useAiEnabled } from "../lib/aiStatus.ts";
 
 export default function Library() {
   const my = useStore((s) => s.profile.level);
   const read = useStore((s) => s.read);
   const [level, setLevel] = useState<Level | 0>(0);
   const { data, loading, error } = useStories();
-  const aiOn = useAiEnabled();
   const list = useMemo(() => (data ?? []).filter((s) => level === 0 || s.level === level).sort((a, b) => b.level - a.level), [data, level]);
 
   return (
@@ -23,7 +21,6 @@ export default function Library() {
         lead="Bacaan asli dengan furigana adaptif, audio, dan terjemahan Indonesia per kalimat. Klik kata apa pun untuk arti dan simpan ke review."
       >
         <Link to="/pembaca" className="btn"><ScanText /> Pembaca Bebas</Link>
-        {aiOn && <Link to="/pembaca?ai=1" className="btn primary"><Sparkles /> Buat cerita AI</Link>}
       </PageHead>
 
       <div className="chips" style={{ marginBottom: 20 }}>

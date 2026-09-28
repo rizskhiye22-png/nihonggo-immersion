@@ -29,14 +29,11 @@ export default function SettingsPage() {
         <h3>Profil & target</h3>
         <div className="list">
           <Row title="Nama panggilan"><input className="input" style={{ maxWidth: 260 }} value={profile.name} onChange={(e) => setP({ name: e.target.value })} /></Row>
-          <Row title="Level target JLPT" desc="Menentukan rencana harian, rekomendasi, dan kosakata default.">
+          <Row title="Tahap kemampuan" desc="Menentukan rencana harian dan rekomendasi tontonan.">
             <Seg value={profile.level} onChange={(level) => setP({ level })} options={LEVELS.map((l) => ({ v: l, label: `N${l}` }))} />
           </Row>
           <Row title="Target menit per hari">
             <input className="input" type="number" min={5} max={600} style={{ maxWidth: 120 }} value={profile.goalMin} onChange={(e) => setP({ goalMin: Math.max(5, Number(e.target.value)) })} />
-          </Row>
-          <Row title="Jadwal ujian">
-            <Seg value={profile.exam ?? "none"} onChange={(v) => setP({ exam: v === "none" ? null : v })} options={[{ v: "jul" as const, label: "Juli" }, { v: "dec" as const, label: "Desember" }, { v: "none" as const, label: "Belum" }]} />
           </Row>
         </div>
       </div>

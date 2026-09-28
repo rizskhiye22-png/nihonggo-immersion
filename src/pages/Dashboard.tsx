@@ -1,12 +1,12 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import {
-  ArrowRight, BookOpenCheck, Brain, CalendarClock, CheckCircle2, Circle, Clapperboard, Clock, Flame, Layers, LibraryBig, Sparkles, Trophy,
+  ArrowRight, BookOpenCheck, Brain, CheckCircle2, Circle, Clapperboard, Clock, Flame, Headphones, Languages, Layers, LibraryBig, Sparkles, Trophy,
 } from "lucide-react";
-import { minutesByDate, nextExam, streak, today, useStore } from "../lib/store.ts";
+import { minutesByDate, streak, today, useStore } from "../lib/store.ts";
 import { countDue } from "../lib/srs.ts";
 import { LEVEL_INFO } from "../lib/levels.ts";
-import { useStories, useVocab } from "../lib/data.ts";
+import { useStories } from "../lib/data.ts";
 import { Heatmap } from "../components/Heatmap.tsx";
 import { Bar, LevelBadge, Ring } from "../components/ui.tsx";
 import { media } from "../../content/media.ts";
@@ -27,7 +27,6 @@ export default function Dashboard() {
   const read = useStore((s) => s.read);
   const newPerDay = useStore((s) => s.settings.newPerDay);
   const { data: stories } = useStories();
-  const { data: vocab } = useVocab(profile.level);
 
   const info = LEVEL_INFO[profile.level];
   const due = useMemo(() => countDue(cards, newPerDay), [cards, newPerDay]);
@@ -37,21 +36,20 @@ export default function Dashboard() {
   const totalMin = useMemo(() => log.reduce((a, e) => a + e.min, 0), [log]);
   const days = useMemo(() => streak(log, reviews), [log, reviews]);
   const known = useMemo(() => Object.values(words).filter((w) => w.s === "known").length, [words]);
-  const exam = nextExam(profile.exam);
-  const daysToExam = exam ? Math.ceil((exam.getTime() - Date.now()) / 86400000) : null;
   const [jp, id] = greeting();
 
-  const coverage = useMemo(() => {
-    if (!vocab) return null;
-    let k = 0;
-    let l = 0;
-    for (const v of vocab) {
-      const s = words[String(v.i)]?.s;
-      if (s === "known") k++;
-      else if (s === "learning") l++;
+  const week = useMemo(() => {
+    const out: { d: string; min: number }[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const key = today(d);
+      out.push({ d: d.toLocaleDateString("id-ID", { weekday: "short" }), min: byDate.get(key) ?? 0 });
     }
-    return { known: k, learning: l, total: vocab.length };
-  }, [vocab, words]);
+    return out;
+  }, [byDate]);
+  const weekTotal = week.reduce((a, b) => a + b.min, 0);
+  const weekMax = Math.max(profile.goalMin, ...week.map((w) => w.min));
 
   const todayKinds = useMemo(() => {
     const m: Record<string, number> = {};
@@ -103,20 +101,22 @@ export default function Dashboard() {
 
         <div className="card" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <div className="card-title">
-            <CalendarClock style={{ color: "var(--gold)" }} />
-            <h3 className="grow">Menuju JLPT</h3>
+            <Headphones style={{ color: "var(--gold)" }} />
+            <h3 className="grow">Imersi minggu ini</h3>
             <LevelBadge level={profile.level} />
           </div>
-          {daysToExam !== null && exam ? (
-            <div>
-              <div className="stat-value text-gold" style={{ fontSize: "3rem" }}>{daysToExam}</div>
-              <div className="muted">hari menuju ujian {exam.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}</div>
-              <div className="muted" style={{ fontSize: "0.78rem", marginTop: 6 }}>Pendaftaran biasanya ditutup ±3 bulan sebelum ujian. Cek jadwal resmi di jlpt.jp.</div>
-            </div>
-          ) : (
-            <p className="muted">Belum memilih jadwal ujian. Atur di Pengaturan untuk hitung mundur.</p>
-          )}
-          <hr className="divider" style={{ margin: "4px 0" }} />
+          <div>
+            <div className="stat-value text-gold" style={{ fontSize: "2.6rem" }}>{Math.round(weekTotal)}<span style={{ fontSize: "1rem" }}> menit</span></div>
+            <div className="muted" style={{ fontSize: "0.85rem" }}>rata-rata {Math.round(weekTotal / 7)} menit/hari · target {profile.goalMin}</div>
+          </div>
+          <div className="week-bars" aria-label="Menit imersi 7 hari terakhir">
+            {week.map((w, i) => (
+              <div key={i} className="week-bar" title={`${w.d}: ${Math.round(w.min)} menit`}>
+                <span style={{ height: `${Math.max(4, (w.min / weekMax) * 100)}%`, opacity: w.min >= profile.goalMin ? 1 : 0.55 }} />
+                <small>{w.d}</small>
+              </div>
+            ))}
+          </div>
           <div>
             <div className="row between" style={{ fontSize: "0.85rem", marginBottom: 6 }}>
               <span>Jam imersi total</span>
@@ -124,22 +124,10 @@ export default function Dashboard() {
             </div>
             <Bar value={totalMin / 60} max={info.hours[0]} />
           </div>
-          {coverage && (
-            <div>
-              <div className="row between" style={{ fontSize: "0.85rem", marginBottom: 6 }}>
-                <span>Kosakata N{profile.level}</span>
-                <strong>{coverage.known + coverage.learning} / {coverage.total}</strong>
-              </div>
-              <div className="bar stacked">
-                <span style={{ width: `${(coverage.known / coverage.total) * 100}%`, background: "var(--ok)" }} />
-                <span style={{ width: `${(coverage.learning / coverage.total) * 100}%`, background: "var(--warn)" }} />
-              </div>
-              <div className="row" style={{ gap: 14, fontSize: "0.72rem", marginTop: 6 }}>
-                <span className="muted">● <span style={{ color: "var(--ok)" }}>dikuasai {coverage.known}</span></span>
-                <span className="muted">● <span style={{ color: "var(--warn)" }}>dipelajari {coverage.learning}</span></span>
-              </div>
-            </div>
-          )}
+          <Link to="/terjemah" className="btn sm" style={{ justifyContent: "space-between" }}>
+            <span className="row"><Languages /> Latihan output di Penerjemah</span>
+            <ArrowRight />
+          </Link>
         </div>
       </div>
 

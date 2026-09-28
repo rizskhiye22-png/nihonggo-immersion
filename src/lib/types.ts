@@ -24,29 +24,6 @@ export type Story = StoryMeta & {
   glossary: Record<string, DictEntry>;
 };
 
-export type GrammarExample = Sentence & { blank?: [number, number] };
-
-export type GrammarPoint = {
-  id: string;
-  level: Level;
-  pattern: string;
-  meaning: string;
-  formation: string;
-  explanation: string;
-  examples: GrammarExample[];
-};
-
-export type Kanji = {
-  c: string;
-  m: string[];
-  on: string[];
-  kun: string[];
-  n: number;
-  g?: number;
-  j?: Level;
-  s?: string[];
-};
-
 export type MediaItem = {
   title: string;
   titleJa?: string;

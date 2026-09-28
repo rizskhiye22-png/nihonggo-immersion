@@ -5,14 +5,6 @@ import { useStore } from "../lib/store.ts";
 import { LEVELS } from "../lib/types.ts";
 import { LevelBadge, PageHead } from "../components/ui.tsx";
 
-// Struktur ujian JLPT (menit) sejak revisi 2020.
-const EXAM: Record<number, { parts: [string, number][]; pass: string }> = {
-  5: { parts: [["Kosakata", 20], ["Tata bahasa & membaca", 40], ["Mendengar", 30]], pass: "80 / 180" },
-  4: { parts: [["Kosakata", 25], ["Tata bahasa & membaca", 55], ["Mendengar", 35]], pass: "90 / 180" },
-  3: { parts: [["Kosakata", 30], ["Tata bahasa & membaca", 70], ["Mendengar", 40]], pass: "95 / 180" },
-  2: { parts: [["Pengetahuan bahasa & membaca", 105], ["Mendengar", 50]], pass: "90 / 180" },
-  1: { parts: [["Pengetahuan bahasa & membaca", 110], ["Mendengar", 55]], pass: "100 / 180" },
-};
 
 export default function Method() {
   const my = useStore((s) => s.profile.level);
@@ -21,7 +13,7 @@ export default function Method() {
       <PageHead
         eyebrow={<><Compass style={{ width: 14 }} /> Metode & Roadmap</>}
         title="Metode imersi THE MARS"
-        lead="Kerangka belajar yang menggabungkan input masif dari konten asli dengan pengulangan berjarak dan latihan ujian, disusun per level JLPT."
+        lead="Belajar seperti anak kecil belajar bahasa: dengar dan tonton sebanyak mungkin, pahami lewat konteks, lalu keluarkan lewat bicara. Disusun per tahap kemampuan."
       />
 
       <div className="grid c3" style={{ marginBottom: 28 }}>
@@ -57,17 +49,16 @@ export default function Method() {
         ))}
       </div>
 
-      <h2>Roadmap per level</h2>
+      <h2>Tahapan & rutinitas</h2>
       <div className="stack" style={{ gap: 14, marginBottom: 28 }}>
         {LEVELS.map((l) => {
           const info = LEVEL_INFO[l];
-          const ex = EXAM[l];
           return (
             <div key={l} className={`card${l === my ? " glow" : ""}`}>
               <div className="row wrap" style={{ gap: 10, marginBottom: 12 }}>
                 <LevelBadge level={l} />
                 <h3 style={{ margin: 0 }}>{info.phase}</h3>
-                {l === my && <span className="badge mars">Target kamu</span>}
+                {l === my && <span className="badge mars">Tahapmu</span>}
                 <span className="grow" />
                 <span className="badge"><Timer style={{ width: 12 }} /> ±{info.hours[0]}–{info.hours[1]} jam kumulatif</span>
               </div>
@@ -75,7 +66,6 @@ export default function Method() {
                 <div>
                   <div className="label">Kemampuan</div>
                   <p style={{ margin: "4px 0 8px" }}>{info.can}</p>
-                  <div className="muted" style={{ fontSize: "0.85rem" }}>Kanji {info.kanji} · Kosakata {info.vocab}</div>
                 </div>
                 <div>
                   <div className="label">Rutinitas harian</div>
@@ -84,19 +74,11 @@ export default function Method() {
                   </ul>
                 </div>
                 <div>
-                  <div className="label">Ujian (menit) · lulus {ex.pass}</div>
-                  <div className="stack" style={{ gap: 6, marginTop: 6 }}>
-                    {ex.parts.map(([n, m]) => (
-                      <div key={n} className="row between" style={{ fontSize: "0.86rem" }}>
-                        <span className="muted">{n}</span>
-                        <strong>{m}</strong>
-                      </div>
-                    ))}
-                  </div>
+                  <div className="label">Fokus tahap ini</div>
+                  <ul style={{ margin: "4px 0 0", paddingLeft: 18, color: "var(--text-2)" }}>
+                    {info.focus.map((f) => <li key={f}>{f}</li>)}
+                  </ul>
                 </div>
-              </div>
-              <div className="chips" style={{ marginTop: 14 }}>
-                {info.focus.map((f) => <span key={f} className="badge gold">{f}</span>)}
               </div>
             </div>
           );
@@ -112,7 +94,7 @@ export default function Method() {
         </div>
       </div>
       <p className="faint" style={{ fontSize: "0.75rem", marginTop: 16 }}>
-        Perkiraan jam belajar adalah gambaran kasar untuk pelajar tanpa latar belakang kanji dan bisa sangat berbeda antarindividu. Struktur ujian mengikuti format JLPT sejak 2020, jadi selalu cek jlpt.jp untuk info terbaru.
+        Perkiraan jam imersi hanya gambaran kasar dan bisa sangat berbeda antarindividu. Yang terpenting adalah konsisten setiap hari.
       </p>
     </div>
   );

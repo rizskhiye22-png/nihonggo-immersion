@@ -1,37 +1,34 @@
-# THE MARS: Imersi Bahasa Jepang (JLPT N5–N1)
+# THE MARS: Belajar Bahasa Jepang dengan Imersi
 
-Platform web untuk belajar bahasa Jepang dengan **metode imersi**, khusus untuk pelajar Indonesia.
-Pengguna belajar langsung dari anime, film, video YouTube, dan bacaan asli. Setiap kata bisa diklik untuk melihat artinya,
-ditambang ke flashcard, lalu diulang dengan algoritma **FSRS**.
+Platform web untuk belajar bahasa Jepang lewat **imersi**: menonton anime, film, dan video, serta mendengar podcast,
+khusus untuk pengguna Indonesia. Cocok untuk yang tidak suka banyak membaca: subtitle Jepang, arti Indonesia setiap kata,
+dan terjemahan kalimat muncul langsung saat menonton.
+
+Semua berjalan di browser pengguna: **gratis, tanpa akun, tanpa server backend, dan tanpa API key**.
 
 ## Fitur
 
 | Fitur | Keterangan |
 |---|---|
-| **Studio Tonton** | Putar YouTube atau file video/audio milik pengguna. **Subtitle otomatis dari suara**: Whisper berjalan di browser (WebGPU/CPU), gratis, tanpa API key. Untuk YouTube lewat berbagi audio tab, untuk file lokal lewat transkripsi penuh atau mode dengar langsung. Bisa juga memuat subtitle .srt/.vtt/.ass. Setiap baris menampilkan **daftar kata + cara baca + arti Bahasa Indonesia** otomatis (mirip Yomitan), terjemahan kalimat gratis, jeda otomatis per baris, mode dengar, tangkapan layar adegan saat menambang, dan ekspor subtitle .srt. |
-| **Perpustakaan** | 10 cerita bertingkat karya asli (N5–N1), furigana adaptif, audio TTS per kalimat/putar semua, terjemahan Indonesia (samar/tampil), kosakata kunci, dan meter pemahaman. |
-| **Pembaca Bebas** | Tempel teks Jepang apa pun (NHK, lirik, subtitle), lalu tokenisasi dan kamus berjalan langsung di browser. Ada juga generator cerita AI sesuai level. |
-| **Review (FSRS)** | Flashcard kalimat dengan gambar adegan, pratinjau interval, dan pintasan 1–4. |
-| **Kosakata JLPT** | ±9.000 kata N5–N1 dengan status dikuasai/dipelajari/baru, serta tombol kirim 10/25 kata baru ke review. |
-| **Kanji** | ±2.000 kanji per level dengan animasi urutan goresan (KanjiVG), on/kun, dan contoh kosakata. |
-| **Tata Bahasa** | 40 pola JLPT N5–N1 dengan penjelasan Bahasa Indonesia dan contoh interaktif. |
-| **Kuis JLPT** | Baca kanji, arti kata, dan isian pola tata bahasa. Skor terbaik disimpan per level. |
-| **Sensei AI** | Mode ngobrol (dengan koreksi), koreksi tulisan, tanya jawab, dan simulasi soal JLPT. |
-| **Rekomendasi Tontonan** | Anime, drama, film, podcast, buku, dan game per level, dengan cara imersi dan timer. |
-| **Dashboard & Log** | Rencana harian per level, hitung mundur ujian, streak, heatmap, jam imersi, dan cakupan kosakata. |
-| **Metode & Roadmap** | Metode THE MARS, tangga subtitle, target jam, dan struktur ujian per level. |
+| **Studio Tonton** | Putar YouTube atau file video/audio. Subtitle Jepang dari file (.srt/.vtt/.ass) atau **otomatis dari suara** memakai pengenal suara bawaan browser (audio tab YouTube, audio video lokal, atau mikrofon). Setiap baris menampilkan **daftar kata + cara baca + arti Bahasa Indonesia** dan terjemahan kalimat. Ada juga jeda per baris, mode dengar, tambang kata dengan tangkapan layar, dan ekspor .srt. |
+| **Penerjemah JP ⇄ ID** | Terjemahan lokal dua arah, input suara, rincian kata, audio normal/pelan, dan **latihan ucap dengan skor** (output). |
+| **Anime, Film & Podcast** | Rekomendasi tontonan dan podcast per tahap, dengan cara imersi dan timer. |
+| **Cerita Bersuara** | 15 cerita asli dengan audio TTS, furigana adaptif, dan terjemahan Indonesia per kalimat. |
+| **Pembaca Bebas** | Tempel teks Jepang apa pun (lirik, transkrip, subtitle). Setiap kata bisa diklik. |
+| **Review (FSRS)** | Ulangi kata tambangan dari tontonan beserta kalimat dan adegannya. |
+| **Dashboard & Log** | Rencana harian per tahap, menit imersi mingguan, streak, heatmap, dan jam imersi. |
 
-Progres pengguna tersimpan di browser (localStorage + IndexedDB). Pengguna bisa mencadangkan dan memulihkan data dari halaman Pengaturan,
-dan kartu bisa diekspor ke CSV untuk Anki.
+Pencarian kata ala Yomitan: klik kata, atau tahan **Shift** lalu arahkan kursor.
 
 ## Teknologi
 
-- **Frontend:** React 19 + Vite + TypeScript, dengan CSS kustom (tanpa framework UI).
-- **Pengenal suara (gratis):** Whisper lewat transformers.js di Web Worker. Library dimuat dari CDN jsDelivr, model dari Hugging Face (diunduh sekali, lalu di-cache browser).
-- **Terjemahan (gratis):** Translator API bawaan Chrome/Edge (on-device), dengan cadangan MyMemory. Hasil disimpan di cache lokal.
+- React + Vite + TypeScript, dengan CSS kustom (tema biru–putih di `src/styles/tokens.css`).
+- **Kamus:** JMdict (lewat paket `kotobako-data`), dibagi menjadi 256 berkas kecil yang dimuat sesuai kebutuhan.
 - **Tokenizer:** kuromoji di Web Worker (`public/workers/kuromoji-worker.js`) agar halaman tidak macet.
-- **Backend AI (opsional):** Cloudflare Pages Functions + Claude API. Hanya aktif jika `ANTHROPIC_API_KEY` diisi. Tanpa key, tombol AI disembunyikan dan semua fitur lain tetap jalan.
-- **Bahasa Jepang:** kuromoji.js (tokenisasi), JMdict/KANJIDIC2/KanjiVG (kamus, lewat paket `kotobako-data`), dan ts-fsrs.
+- **Terjemahan:** Translator API bawaan Chrome/Edge (berjalan di perangkat). Di browser lain, arti kata tampil dalam bahasa Inggris.
+- **Suara → teks:** Web Speech API bawaan browser (`ja-JP`). Tidak ada model yang diunduh.
+- **Suara Jepang (TTS):** Web Speech Synthesis bawaan browser.
+- Situs sepenuhnya statis. Tidak ada Functions, database, atau API key.
 
 ## Menjalankan secara lokal
 
@@ -40,17 +37,9 @@ npm install
 npm run dev            # membangun data lalu menjalankan Vite di http://localhost:5173
 ```
 
-Untuk mencoba fitur AI secara lokal:
-
-```bash
-cp .dev.vars.example .dev.vars   # isi ANTHROPIC_API_KEY
-npm run build
-npm run preview                  # wrangler pages dev di http://localhost:8788
-```
-
-`npm run build` menjalankan `scripts/build-data.ts` terlebih dahulu. Skrip ini menghasilkan `public/data` (kamus terbagi, daftar JLPT,
-kanji, cerita dan tata bahasa yang sudah ditokenisasi), `public/dict/kuromoji`, dan `public/vendor/kuromoji.js`. Folder hasil
-ini tidak di-commit. Butuh **Node.js 22.18+**.
+`npm run build` menjalankan `scripts/build-data.ts` terlebih dahulu. Skrip ini menghasilkan `public/data` (kamus terbagi dan cerita
+yang sudah ditokenisasi), `public/dict/kuromoji`, dan `public/vendor/kuromoji.js`. Folder hasil
+ini tidak di-commit. Butuh **Node.js 22**.
 
 ## Deploy ke Cloudflare Pages (dengan domain sendiri)
 
@@ -60,18 +49,9 @@ ini tidak di-commit. Butuh **Node.js 22.18+**.
    - Build command: `npm run build`
    - Build output directory: `dist`
    - Environment variable: `NODE_VERSION` = `22`
-3. (Opsional, berbayar) Untuk Sensei AI, tambahkan di **Settings → Variables and Secrets** (tipe *Secret*).
-   Tanpa langkah ini situs tetap berfungsi penuh secara gratis:
-   - `ANTHROPIC_API_KEY`: kunci API dari console.anthropic.com
-   - (opsional) `AI_MODEL`: default `claude-opus-5`
-   - (opsional) `AI_DAILY_LIMIT`: batas permintaan AI per IP per hari (default 60, butuh KV di langkah 5)
+3. Tidak perlu variabel rahasia apa pun.
 4. **Custom domains** → **Set up a custom domain** → masukkan domainmu (mis. `themars.id` atau `belajar.themars.id`).
    Karena domain sudah ada di Cloudflare, DNS akan diatur otomatis.
-5. (Disarankan) Batasi biaya AI:
-   - Buat KV namespace (`npx wrangler kv namespace create RATE_LIMIT`), lalu bind sebagai `RATE_LIMIT` di
-     **Settings → Bindings**.
-   - Opsional: tambahkan *Rate limiting rule* Cloudflare untuk path `/api/ai/*`.
-
 Setiap push ke branch produksi akan otomatis di-deploy ulang.
 
 ## Mengganti tema / branding
@@ -84,15 +64,13 @@ Untuk memakai tema CSS sendiri, ganti nilai variabel di file itu. Komponen tidak
 
 - **Cerita:** tambahkan objek baru di `content/stories.ts` (kalimat Jepang + terjemahan Indonesia + kosakata kunci).
   Tokenisasi dan furigana dibuat otomatis saat build.
-- **Tata bahasa:** `content/grammar.ts`. Tandai bagian pola pada contoh dengan `[[...]]` agar muncul di kuis isian.
 - **Rekomendasi media:** `content/media.ts`.
 
 ## Struktur
 
 ```
-content/            konten asli (cerita, tata bahasa, rekomendasi media)
+content/            konten asli (cerita, rekomendasi media)
 scripts/            build-data.ts: pembuat data statis
-functions/          Cloudflare Pages Functions (endpoint AI)
 src/lib/            logika: tokenizer, kamus, FSRS, subtitle, pemutar, store
 src/components/     komponen UI (teks Jepang interaktif, popup kamus, layout, dll.)
 src/pages/          halaman aplikasi
@@ -101,11 +79,11 @@ src/styles/         token desain + gaya komponen
 
 ## Lisensi data
 
-- JMdict, KANJIDIC2 © Electronic Dictionary Research and Development Group, lisensi **CC BY-SA 4.0**.
-- KanjiVG © Ulrich Apel, lisensi **CC BY-SA 3.0**.
-- Level JLPT: perkiraan komunitas (open-anki-jlpt-decks, JLPT 10k). JLPT tidak menerbitkan daftar resmi.
+- JMdict © Electronic Dictionary Research and Development Group, lisensi **CC BY-SA 4.0**.
+- KanjiVG © Ulrich Apel, lisensi **CC BY-SA 3.0** (bentuk kanji 語 pada logo).
+- Label tingkat kata (N5–N1): perkiraan komunitas (open-anki-jlpt-decks, JLPT 10k).
 - kuromoji.js: Apache-2.0.
-- Cerita, penjelasan tata bahasa, dan teks antarmuka: karya asli THE MARS.
+- Cerita dan teks antarmuka: karya asli THE MARS.
 
 Studio Tonton memproses video dan subtitle di browser pengguna tanpa mengunggahnya ke server. Pengguna bertanggung jawab
 memakai konten dari sumber yang legal.

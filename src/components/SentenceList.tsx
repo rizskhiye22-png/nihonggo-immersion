@@ -1,30 +1,28 @@
 import { useEffect, useState } from "react";
-import { Pause, Play, Sparkles, Volume2 } from "lucide-react";
+import { Languages, Pause, Play, Volume2 } from "lucide-react";
 import type { Word } from "../lib/japanese.ts";
 import type { Level } from "../lib/types.ts";
 import { speak, stopSpeaking } from "../lib/tts.ts";
-import { streamAi } from "../lib/ai.ts";
+import { translate } from "../lib/translate.ts";
 import { JapaneseText } from "./JapaneseText.tsx";
 import type { PopupContext } from "./WordPopup.tsx";
-import { AiText } from "./AiText.tsx";
-import { useAiEnabled } from "../lib/aiStatus.ts";
+import { toast } from "./ui.tsx";
 
 export type TrMode = "hide" | "blur" | "show";
 type S = { ja: string; id?: string; w: Word[] };
 
-/** Daftar kalimat interaktif: audio per kalimat, putar semua, terjemahan, dan analisis AI. */
-export function SentenceList({ sentences, tr, base, level, playAll, onPlayAllEnd }: {
+/** Daftar kalimat interaktif: audio per kalimat, putar semua, dan terjemahan (lokal). */
+export function SentenceList({ sentences, tr, base, playAll, onPlayAllEnd }: {
   sentences: S[];
   tr: TrMode;
   base: PopupContext;
-  level: Level;
+  level?: Level;
   playAll: boolean;
   onPlayAllEnd: () => void;
 }) {
   const [playing, setPlaying] = useState(-1);
   const [revealed, setRevealed] = useState<Set<number>>(new Set());
-  const [ai, setAi] = useState<Record<number, { text: string; busy: boolean; error?: string }>>({});
-  const aiOn = useAiEnabled();
+  const [local, setLocal] = useState<Record<number, string>>({});
 
   useEffect(() => {
     if (!playAll) {
@@ -54,13 +52,12 @@ export function SentenceList({ sentences, tr, base, level, playAll, onPlayAllEnd
 
   useEffect(() => () => stopSpeaking(), []);
 
-  async function explain(i: number) {
-    setAi((a) => ({ ...a, [i]: { text: "", busy: true } }));
+  async function translateOne(i: number) {
     try {
-      await streamAi("explain", { sentence: sentences[i].ja, level }, (text) => setAi((a) => ({ ...a, [i]: { text, busy: true } })));
-      setAi((a) => ({ ...a, [i]: { ...a[i], busy: false } }));
+      const t = await translate(sentences[i].ja);
+      setLocal((m) => ({ ...m, [i]: t }));
     } catch (e) {
-      setAi((a) => ({ ...a, [i]: { text: "", busy: false, error: (e as Error).message } }));
+      toast((e as Error).message);
     }
   }
 
@@ -75,9 +72,9 @@ export function SentenceList({ sentences, tr, base, level, playAll, onPlayAllEnd
             }}>
               {playing === i ? <Pause /> : <Volume2 />}
             </button>
-            {aiOn && (
-              <button className="btn icon sm ghost" aria-label="Analisis AI" onClick={() => explain(i)}>
-                <Sparkles />
+            {!s.id && !local[i] && (
+              <button className="btn icon sm ghost" aria-label="Terjemahkan kalimat" title="Terjemahkan (lokal)" onClick={() => translateOne(i)}>
+                <Languages />
               </button>
             )}
           </div>
@@ -91,11 +88,7 @@ export function SentenceList({ sentences, tr, base, level, playAll, onPlayAllEnd
                 {s.id}
               </div>
             )}
-            {ai[i] && (
-              <div className="card" style={{ marginTop: 10, padding: 14, background: "var(--bg-2)" }}>
-                {ai[i].error ? <span style={{ color: "var(--danger)" }}>{ai[i].error}</span> : <AiText text={ai[i].text || "…"} streaming={ai[i].busy} />}
-              </div>
-            )}
+            {local[i] && <div className="tr">🇮🇩 {local[i]}</div>}
           </div>
         </div>
       ))}

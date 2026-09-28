@@ -1,6 +1,6 @@
 // Memuat data statis (dihasilkan scripts/build-data.ts) dengan cache sederhana.
 import { useEffect, useState } from "react";
-import type { GrammarPoint, Kanji, Level, Story, StoryMeta } from "./types.ts";
+import type { Story, StoryMeta } from "./types.ts";
 
 const cache = new Map<string, Promise<unknown>>();
 
@@ -34,30 +34,14 @@ export function useJson<T>(url: string | null) {
   return { data: fresh ? state.data : undefined, error: fresh ? state.error : undefined, loading: !!url && !fresh };
 }
 
-export type VocabItem = { i: number; w: string; r: string; m: string[]; p: string };
-export type KanjiItem = Kanji & { x: [string, string, string][] };
-export type Stats = { vocab: Record<string, number>; kanji: Record<string, number>; dictionary: number; stories: number; grammar: number };
+export type Stats = { dictionary: number; stories: number };
 
 export const urls = {
   stories: "/data/stories/index.json",
   story: (id: string) => `/data/stories/${id}.json`,
-  grammar: "/data/grammar.json",
-  vocab: (l: Level) => `/data/jlpt/n${l}.json`,
-  kanji: (g: string) => `/data/kanji/${g}.json`,
   stats: "/data/stats.json",
 };
 
 export const useStories = () => useJson<StoryMeta[]>(urls.stories);
 export const useStory = (id: string) => useJson<Story>(urls.story(id));
-export const useGrammar = () => useJson<GrammarPoint[]>(urls.grammar);
-export const useVocab = (l: Level | null) => useJson<VocabItem[]>(l ? urls.vocab(l) : null);
 export const useStats = () => useJson<Stats>(urls.stats);
-
-/** Kelompok kanji memakai pembagian JLPT lama: N3 & N2 digabung. */
-export const KANJI_GROUPS = [
-  { id: "n5", label: "N5", levels: [5] },
-  { id: "n4", label: "N4", levels: [4] },
-  { id: "n3", label: "N3–N2", levels: [3, 2] },
-  { id: "n1", label: "N1", levels: [1] },
-] as const;
-export const kanjiGroupFor = (l: Level) => KANJI_GROUPS.find((g) => (g.levels as readonly number[]).includes(l))!.id;

@@ -102,7 +102,7 @@ export default function Review() {
           </p>
           <div className="btn-row" style={{ justifyContent: "center", marginTop: 16 }}>
             <Link to="/studio" className="btn primary"><Clapperboard /> Tambang dari tontonan</Link>
-            <Link to="/kosakata" className="btn"><Layers /> Tambah dari kosakata</Link>
+            <Link to="/baca" className="btn"><Layers /> Tambang dari cerita</Link>
           </div>
         </div>
       </div>
