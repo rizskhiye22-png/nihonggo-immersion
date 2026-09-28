@@ -1,0 +1,5 @@
+# Salin menjadi .dev.vars untuk pengembangan lokal (jangan di-commit)
+ANTHROPIC_API_KEY=sk-ant-...
+# Opsional
+# AI_MODEL=claude-opus-5
+# AI_DAILY_LIMIT=60

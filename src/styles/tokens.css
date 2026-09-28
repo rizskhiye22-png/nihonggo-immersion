@@ -1,0 +1,103 @@
+/* ════════════════════════════════════════════════════════════════
+   THE MARS — token desain
+   Ganti nilai di sini untuk menyesuaikan tema/brand tanpa menyentuh komponen.
+   ════════════════════════════════════════════════════════════════ */
+:root {
+  /* Warna dasar (mode gelap = identitas utama) */
+  --bg: #07060b;
+  --bg-2: #0c0a12;
+  --surface: #13101a;
+  --surface-2: #1a1622;
+  --surface-3: #231e2d;
+  --glass: rgba(26, 22, 34, 0.62);
+  --border: rgba(255, 255, 255, 0.07);
+  --border-strong: rgba(255, 255, 255, 0.14);
+
+  --text: #f6f0ea;
+  --text-2: #cfc6be;
+  --muted: #968d86;
+  --faint: #5f5852;
+
+  /* Warna brand */
+  --mars: #ff5533;
+  --mars-2: #ff8a4c;
+  --mars-3: #ffb27a;
+  --mars-glow: rgba(255, 85, 51, 0.35);
+  --mars-soft: rgba(255, 85, 51, 0.12);
+  --gold: #e9c37d;
+  --gold-soft: rgba(233, 195, 125, 0.12);
+  --grad-mars: linear-gradient(135deg, #ff4d2e 0%, #ff7a45 55%, #ffb068 100%);
+  --grad-gold: linear-gradient(135deg, #f5d9a0 0%, #e0ae5c 100%);
+  --grad-surface: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01));
+
+  /* Status */
+  --ok: #4ade80;
+  --ok-soft: rgba(74, 222, 128, 0.12);
+  --warn: #fbbf24;
+  --warn-soft: rgba(251, 191, 36, 0.14);
+  --danger: #f87171;
+  --danger-soft: rgba(248, 113, 113, 0.12);
+  --info: #7cc7ff;
+  --info-soft: rgba(124, 199, 255, 0.12);
+
+  /* Warna level JLPT */
+  --n5: #4ade80;
+  --n4: #38bdf8;
+  --n3: #a78bfa;
+  --n2: #fb923c;
+  --n1: #f43f5e;
+
+  /* Status kata di teks */
+  --word-new: rgba(255, 138, 76, 0.55);
+  --word-learning-bg: rgba(251, 191, 36, 0.16);
+  --word-hover: rgba(255, 85, 51, 0.18);
+
+  /* Tipografi */
+  --font-display: "Sora", "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-body: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-jp: "Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif;
+  --font-jp-serif: "Shippori Mincho B1", "Noto Serif JP", serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* Bentuk & kedalaman */
+  --r-xs: 8px;
+  --r-sm: 12px;
+  --r-md: 16px;
+  --r-lg: 22px;
+  --r-xl: 30px;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 10px 30px -12px rgba(0, 0, 0, 0.7);
+  --shadow-lg: 0 30px 80px -24px rgba(0, 0, 0, 0.85);
+  --shadow-glow: 0 10px 40px -10px var(--mars-glow);
+  --ring: 0 0 0 3px rgba(255, 85, 51, 0.35);
+
+  --sidebar-w: 264px;
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  --bg: #faf6f1;
+  --bg-2: #f4eee7;
+  --surface: #ffffff;
+  --surface-2: #f8f3ed;
+  --surface-3: #efe7de;
+  --glass: rgba(255, 255, 255, 0.72);
+  --border: rgba(40, 20, 10, 0.08);
+  --border-strong: rgba(40, 20, 10, 0.16);
+  --text: #1c1512;
+  --text-2: #43372f;
+  --muted: #7b6d63;
+  --faint: #ab9e94;
+  --mars: #e8421f;
+  --mars-glow: rgba(232, 66, 31, 0.25);
+  --mars-soft: rgba(232, 66, 31, 0.09);
+  --gold: #a87524;
+  --gold-soft: rgba(168, 117, 36, 0.1);
+  --word-new: rgba(232, 66, 31, 0.5);
+  --word-learning-bg: rgba(234, 170, 8, 0.2);
+  --word-hover: rgba(232, 66, 31, 0.12);
+  --shadow-md: 0 10px 30px -14px rgba(60, 30, 10, 0.25);
+  --shadow-lg: 0 30px 80px -30px rgba(60, 30, 10, 0.35);
+  color-scheme: light;
+}

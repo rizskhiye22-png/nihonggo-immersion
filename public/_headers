@@ -1,0 +1,17 @@
+/dict/*
+  Cache-Control: public, max-age=31536000, immutable
+  Content-Type: application/octet-stream
+
+/vendor/*
+  Cache-Control: public, max-age=604800
+
+/data/*
+  Cache-Control: public, max-age=86400
+
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), geolocation=()

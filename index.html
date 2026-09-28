@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>THE MARS — Imersi Bahasa Jepang JLPT N5–N1</title>
+    <meta name="description" content="Belajar bahasa Jepang dengan metode imersi: tonton anime & film dengan subtitle interaktif, baca cerita bertingkat, flashcard FSRS, dan Sensei AI. Persiapan JLPT N5–N1." />
+    <meta name="theme-color" content="#07060b" />
+    <meta property="og:title" content="THE MARS — Imersi Bahasa Jepang" />
+    <meta property="og:description" content="Belajar dari anime, film, dan bacaan asli. Persiapan JLPT N5–N1 dalam Bahasa Indonesia." />
+    <meta property="og:type" content="website" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Shippori+Mincho+B1:wght@500;700&family=Sora:wght@600;700;800&family=JetBrains+Mono:wght@500&display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      try {
+        var s = JSON.parse(localStorage.getItem("themars:v1") || "{}");
+        document.documentElement.dataset.theme = (s.settings && s.settings.theme) || "dark";
+      } catch (e) {}
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

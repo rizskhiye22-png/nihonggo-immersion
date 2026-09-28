@@ -1,0 +1,10 @@
+node_modules
+dist
+.wrangler
+.dev.vars
+# data yang dihasilkan oleh scripts/build-data.ts
+public/data
+public/vendor
+public/dict
+*.log
+.DS_Store

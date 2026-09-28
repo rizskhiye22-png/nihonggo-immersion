@@ -1,0 +1,11 @@
+# Konfigurasi Cloudflare Pages untuk THE MARS
+name = "the-mars-nihongo"
+pages_build_output_dir = "./dist"
+compatibility_date = "2026-09-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Opsional: KV untuk membatasi jumlah permintaan AI per pengunjung per hari.
+# Buat dengan `npx wrangler kv namespace create RATE_LIMIT`, lalu isi id-nya di sini.
+# [[kv_namespaces]]
+# binding = "RATE_LIMIT"
+# id = "<id-kv-namespace>"
