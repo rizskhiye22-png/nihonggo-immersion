@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import {
   ArrowRight, Bot, Brain, Captions, Clapperboard, Flame, LibraryBig, MousePointerClick, Pickaxe, ScanText, Sparkles, Target, Type,
 } from "lucide-react";
-import { Logo } from "../components/Logo.tsx";
+import { Logo, LogoMark } from "../components/Logo.tsx";
 import { useStore } from "../lib/store.ts";
 import { LEVEL_INFO, METHOD_STEPS } from "../lib/levels.ts";
 import { LEVELS } from "../lib/types.ts";
@@ -67,16 +67,16 @@ export default function Landing() {
             ))}
           </div>
         </div>
-        <div className="planet" aria-hidden="true">
-          <div className="orbit" />
-          <div className="sphere" />
+        <div className="hero-mark" aria-hidden="true">
+          <div className="hero-mark-glow" />
+          <LogoMark size={300} animate />
           {[
-            ["火", "8%", "18%", "0s"],
-            ["星", "82%", "12%", "1.2s"],
-            ["日本語", "4%", "74%", "2s"],
-            ["夢", "86%", "70%", "0.6s"],
+            ["日本語", "-2%", "8%", "0s"],
+            ["あ", "88%", "4%", "1.2s"],
+            ["カ", "-4%", "78%", "2s"],
+            ["漢字", "84%", "80%", "0.6s"],
           ].map(([k, l, t, d]) => (
-            <span key={k} className="kana" style={{ left: l, top: t, animationDelay: d }}>{k}</span>
+            <span key={k} className="kana-chip jp" style={{ left: l, top: t, animationDelay: d }}>{k}</span>
           ))}
         </div>
       </section>
