@@ -158,7 +158,7 @@
   box-shadow: var(--shadow-glow), inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 .btn.primary:hover { filter: brightness(1.08); }
-.btn.gold { background: var(--grad-gold); color: #2a1a05; border-color: transparent; }
+.btn.gold { background: var(--grad-gold); color: var(--on-gold); border-color: transparent; }
 .btn.ghost { background: transparent; border-color: transparent; color: var(--text-2); }
 .btn.ghost:hover { background: var(--surface-2); color: var(--text); }
 .btn.outline { background: transparent; }
@@ -188,7 +188,7 @@
   inset: -1px;
   border-radius: inherit;
   padding: 1px;
-  background: linear-gradient(135deg, rgba(255, 85, 51, 0.6), transparent 40%, transparent 60%, rgba(233, 195, 125, 0.45));
+  background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.6), transparent 40%, transparent 60%, rgba(var(--accent2-rgb), 0.45));
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
@@ -200,8 +200,8 @@
 .hero-card {
   overflow: hidden;
   background:
-    radial-gradient(600px 300px at 100% 0%, rgba(255, 85, 51, 0.22), transparent 60%),
-    radial-gradient(500px 300px at 0% 100%, rgba(233, 195, 125, 0.1), transparent 60%),
+    radial-gradient(600px 300px at 100% 0%, rgba(var(--accent-rgb), 0.22), transparent 60%),
+    radial-gradient(500px 300px at 0% 100%, rgba(var(--accent2-rgb), 0.1), transparent 60%),
     var(--surface);
 }
 
@@ -235,8 +235,8 @@
   border: 1px solid var(--border);
   white-space: nowrap;
 }
-.badge.mars { background: var(--mars-soft); color: var(--mars-2); border-color: rgba(255, 85, 51, 0.25); }
-.badge.gold { background: var(--gold-soft); color: var(--gold); border-color: rgba(233, 195, 125, 0.25); }
+.badge.mars { background: var(--mars-soft); color: var(--mars-2); border-color: rgba(var(--accent-rgb), 0.25); }
+.badge.gold { background: var(--gold-soft); color: var(--gold); border-color: rgba(var(--accent2-rgb), 0.25); }
 .badge.ok { background: var(--ok-soft); color: var(--ok); border-color: transparent; }
 .badge.warn { background: var(--warn-soft); color: var(--warn); border-color: transparent; }
 .badge.info { background: var(--info-soft); color: var(--info); border-color: transparent; }
@@ -257,6 +257,7 @@
 .lvl-3 { background: var(--n3); }
 .lvl-2 { background: var(--n2); }
 .lvl-1 { background: var(--n1); color: #fff; }
+:root[data-theme="dark"] .lvl-1 { color: #06224a; }
 
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip {
@@ -386,15 +387,15 @@ input[type="range"] { accent-color: var(--mars); width: 100%; }
 
 .heatmap { display: grid; grid-auto-flow: column; grid-template-rows: repeat(7, 1fr); gap: 4px; overflow-x: auto; padding-bottom: 4px; }
 .heatmap i { width: 13px; height: 13px; border-radius: 4px; background: var(--surface-3); display: block; }
-.heatmap i[data-l="1"] { background: rgba(255, 85, 51, 0.28); }
-.heatmap i[data-l="2"] { background: rgba(255, 85, 51, 0.5); }
-.heatmap i[data-l="3"] { background: rgba(255, 110, 60, 0.78); }
-.heatmap i[data-l="4"] { background: #ff6a3d; box-shadow: 0 0 10px rgba(255, 106, 61, 0.5); }
+.heatmap i[data-l="1"] { background: rgba(var(--accent-rgb), 0.28); }
+.heatmap i[data-l="2"] { background: rgba(var(--accent-rgb), 0.5); }
+.heatmap i[data-l="3"] { background: rgba(var(--accent-rgb), 0.78); }
+.heatmap i[data-l="4"] { background: var(--mars-2); box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.5); }
 .hm-legend { background: var(--surface-3); }
-.hm-legend[data-l="1"] { background: rgba(255, 85, 51, 0.28); }
-.hm-legend[data-l="2"] { background: rgba(255, 85, 51, 0.5); }
-.hm-legend[data-l="3"] { background: rgba(255, 110, 60, 0.78); }
-.hm-legend[data-l="4"] { background: #ff6a3d; }
+.hm-legend[data-l="1"] { background: rgba(var(--accent-rgb), 0.28); }
+.hm-legend[data-l="2"] { background: rgba(var(--accent-rgb), 0.5); }
+.hm-legend[data-l="3"] { background: rgba(var(--accent-rgb), 0.78); }
+.hm-legend[data-l="4"] { background: var(--mars-2); }
 .heatmap i.today { outline: 1.5px solid var(--text); outline-offset: 1px; }
 
 /* ═════════════ Teks Jepang interaktif ═════════════ */
@@ -513,7 +514,7 @@ input[type="range"] { accent-color: var(--mars); width: 100%; }
   text-align: center;
   padding: 24px;
   background:
-    radial-gradient(500px 260px at 50% 110%, rgba(255, 85, 51, 0.25), transparent 70%),
+    radial-gradient(500px 260px at 50% 110%, rgba(var(--accent-rgb), 0.25), transparent 70%),
     linear-gradient(180deg, #0d0a12, #050407);
   color: var(--text-2);
 }
@@ -741,7 +742,7 @@ input[type="range"] { accent-color: var(--mars); width: 100%; }
   font-weight: 650;
   font-size: 0.85rem;
 }
-.timer-pill.running { border-color: rgba(255, 85, 51, 0.5); box-shadow: 0 0 0 4px var(--mars-soft); }
+.timer-pill.running { border-color: rgba(var(--accent-rgb), 0.5); box-shadow: 0 0 0 4px var(--mars-soft); }
 .timer-pill .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--faint); }
 .timer-pill.running .dot { background: var(--mars); animation: pulse 1.4s infinite; }
 @keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 var(--mars-glow); } 50% { box-shadow: 0 0 0 6px transparent; } }
@@ -770,7 +771,7 @@ input[type="range"] { accent-color: var(--mars); width: 100%; }
   border: 1px solid rgba(124, 199, 255, 0.18);
 }
 .callout svg { width: 20px; height: 20px; color: var(--info); flex: none; margin-top: 2px; }
-.callout.mars { background: var(--mars-soft); border-color: rgba(255, 85, 51, 0.22); }
+.callout.mars { background: var(--mars-soft); border-color: rgba(var(--accent-rgb), 0.22); }
 .callout.mars svg { color: var(--mars-2); }
 .step-num { font-family: var(--font-display); font-weight: 800; font-size: 0.8rem; color: var(--mars-2); letter-spacing: 0.1em; }
 .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 20px; overflow-x: auto; }
@@ -796,8 +797,8 @@ input[type="range"] { accent-color: var(--mars); width: 100%; }
   inset: 12%;
   border-radius: 50%;
   background:
-    radial-gradient(circle at 32% 28%, #ffb37a 0%, #ff6a3d 28%, #c9321a 58%, #4a0f06 100%);
-  box-shadow: inset -30px -40px 80px rgba(0, 0, 0, 0.65), 0 0 120px rgba(255, 85, 51, 0.45);
+    radial-gradient(circle at 32% 28%, #ffffff 0%, #bfe0ff 18%, #5aa2ff 45%, #1d4ed8 72%, #0a1f5c 100%);
+  box-shadow: inset -30px -40px 80px rgba(5, 20, 70, 0.55), 0 0 120px rgba(var(--accent-rgb), 0.45);
   animation: float 8s ease-in-out infinite;
 }
 .planet .sphere::after {
@@ -806,17 +807,17 @@ input[type="range"] { accent-color: var(--mars); width: 100%; }
   inset: 0;
   border-radius: 50%;
   background:
-    radial-gradient(ellipse 30% 12% at 60% 40%, rgba(80, 15, 5, 0.35), transparent),
-    radial-gradient(ellipse 22% 9% at 35% 65%, rgba(80, 15, 5, 0.3), transparent),
-    radial-gradient(ellipse 14% 6% at 70% 72%, rgba(255, 200, 150, 0.18), transparent);
+    radial-gradient(ellipse 30% 12% at 60% 40%, rgba(10, 30, 100, 0.28), transparent),
+    radial-gradient(ellipse 22% 9% at 35% 65%, rgba(10, 30, 100, 0.24), transparent),
+    radial-gradient(ellipse 14% 6% at 70% 72%, rgba(255, 255, 255, 0.35), transparent);
 }
-.planet .orbit { position: absolute; inset: 0; border-radius: 50%; border: 1px solid rgba(233, 195, 125, 0.25); transform: rotateX(72deg) rotateZ(-18deg); }
+.planet .orbit { position: absolute; inset: 0; border-radius: 50%; border: 1px solid rgba(var(--accent2-rgb), 0.25); transform: rotateX(72deg) rotateZ(-18deg); }
 .planet .kana {
   position: absolute;
   font-family: var(--font-jp-serif);
   font-size: 1.6rem;
   color: var(--gold);
-  text-shadow: 0 0 20px rgba(233, 195, 125, 0.5);
+  text-shadow: 0 0 20px rgba(var(--accent2-rgb), 0.5);
   animation: float 6s ease-in-out infinite;
 }
 @keyframes float { 50% { transform: translateY(-12px); } }
@@ -824,6 +825,8 @@ input[type="range"] { accent-color: var(--mars); width: 100%; }
 .section-head { text-align: center; max-width: 720px; margin: 0 auto 50px; }
 .feature-icon { width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; background: var(--mars-soft); color: var(--mars-2); margin-bottom: 16px; }
 .feature-icon svg { width: 24px; height: 24px; }
+.stars { opacity: 0; }
+:root[data-theme="dark"] .stars { opacity: 1; }
 .stars { position: absolute; inset: 0; pointer-events: none; background-image:
   radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,.6), transparent),
   radial-gradient(1px 1px at 30% 70%, rgba(255,255,255,.4), transparent),

@@ -1,56 +1,62 @@
 /* ════════════════════════════════════════════════════════════════
-   THE MARS — token desain
+   THE MARS — token desain · tema BIRU–PUTIH
    Ganti nilai di sini untuk menyesuaikan tema/brand tanpa menyentuh komponen.
+   (Nama variabel --mars/--gold dipertahankan: --mars = aksen utama, --gold = aksen kedua.)
    ════════════════════════════════════════════════════════════════ */
-:root {
-  /* Warna dasar (mode gelap = identitas utama) */
-  --bg: #07060b;
-  --bg-2: #0c0a12;
-  --surface: #13101a;
-  --surface-2: #1a1622;
-  --surface-3: #231e2d;
-  --glass: rgba(26, 22, 34, 0.62);
-  --border: rgba(255, 255, 255, 0.07);
-  --border-strong: rgba(255, 255, 255, 0.14);
 
-  --text: #f6f0ea;
-  --text-2: #cfc6be;
-  --muted: #968d86;
-  --faint: #5f5852;
+/* ── Mode terang (default): putih bersih dengan gradien biru ── */
+:root {
+  --accent-rgb: 37, 99, 235;      /* biru utama */
+  --accent2-rgb: 14, 165, 233;    /* biru langit */
+
+  --bg: #f6f9ff;
+  --bg-2: #eef4ff;
+  --surface: #ffffff;
+  --surface-2: #f3f7ff;
+  --surface-3: #e5edfb;
+  --glass: rgba(255, 255, 255, 0.75);
+  --border: rgba(30, 64, 175, 0.09);
+  --border-strong: rgba(30, 64, 175, 0.18);
+
+  --text: #0b1a3a;
+  --text-2: #2d3f66;
+  --muted: #6477a0;
+  --faint: #9aa9c7;
 
   /* Warna brand */
-  --mars: #ff5533;
-  --mars-2: #ff8a4c;
-  --mars-3: #ffb27a;
-  --mars-glow: rgba(255, 85, 51, 0.35);
-  --mars-soft: rgba(255, 85, 51, 0.12);
-  --gold: #e9c37d;
-  --gold-soft: rgba(233, 195, 125, 0.12);
-  --grad-mars: linear-gradient(135deg, #ff4d2e 0%, #ff7a45 55%, #ffb068 100%);
-  --grad-gold: linear-gradient(135deg, #f5d9a0 0%, #e0ae5c 100%);
-  --grad-surface: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01));
+  --mars: #2563eb;
+  --mars-2: #3b82f6;
+  --mars-3: #1d4ed8;
+  --mars-glow: rgba(37, 99, 235, 0.3);
+  --mars-soft: rgba(37, 99, 235, 0.09);
+  --gold: #0284c7;
+  --gold-soft: rgba(14, 165, 233, 0.1);
+  --grad-mars: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 55%, #60c5ff 100%);
+  --grad-gold: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
+  --grad-surface: linear-gradient(180deg, rgba(255, 255, 255, 1), rgba(238, 244, 255, 1));
+  --on-gold: #ffffff;
 
   /* Status */
-  --ok: #4ade80;
-  --ok-soft: rgba(74, 222, 128, 0.12);
-  --warn: #fbbf24;
-  --warn-soft: rgba(251, 191, 36, 0.14);
-  --danger: #f87171;
-  --danger-soft: rgba(248, 113, 113, 0.12);
-  --info: #7cc7ff;
-  --info-soft: rgba(124, 199, 255, 0.12);
+  --ok: #16a34a;
+  --ok-soft: rgba(22, 163, 74, 0.1);
+  --warn: #d97706;
+  --warn-soft: rgba(217, 119, 6, 0.12);
+  --danger: #dc2626;
+  --danger-soft: rgba(220, 38, 38, 0.09);
+  --info: #0284c7;
+  --info-soft: rgba(2, 132, 199, 0.09);
 
   /* Warna level JLPT */
-  --n5: #4ade80;
+  --n5: #34d399;
   --n4: #38bdf8;
-  --n3: #a78bfa;
-  --n2: #fb923c;
-  --n1: #f43f5e;
+  --n3: #818cf8;
+  --n2: #3b82f6;
+  --n1: #1e3a8a;
 
   /* Status kata di teks */
-  --word-new: rgba(255, 138, 76, 0.55);
-  --word-learning-bg: rgba(251, 191, 36, 0.16);
-  --word-hover: rgba(255, 85, 51, 0.18);
+  --word-new: rgba(37, 99, 235, 0.45);
+  --word-learning-bg: rgba(245, 158, 11, 0.18);
+  --word-hover: rgba(37, 99, 235, 0.1);
 
   /* Tipografi */
   --font-display: "Sora", "Plus Jakarta Sans", system-ui, sans-serif;
@@ -65,39 +71,66 @@
   --r-md: 16px;
   --r-lg: 22px;
   --r-xl: 30px;
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 10px 30px -12px rgba(0, 0, 0, 0.7);
-  --shadow-lg: 0 30px 80px -24px rgba(0, 0, 0, 0.85);
-  --shadow-glow: 0 10px 40px -10px var(--mars-glow);
-  --ring: 0 0 0 3px rgba(255, 85, 51, 0.35);
+  --shadow-sm: 0 1px 2px rgba(15, 40, 100, 0.06);
+  --shadow-md: 0 12px 32px -14px rgba(15, 40, 120, 0.22);
+  --shadow-lg: 0 30px 80px -28px rgba(15, 40, 120, 0.32);
+  --shadow-glow: 0 10px 34px -10px var(--mars-glow);
+  --ring: 0 0 0 3px rgba(37, 99, 235, 0.28);
 
   --sidebar-w: 264px;
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
-  color-scheme: dark;
+  color-scheme: light;
 }
 
-:root[data-theme="light"] {
-  --bg: #faf6f1;
-  --bg-2: #f4eee7;
-  --surface: #ffffff;
-  --surface-2: #f8f3ed;
-  --surface-3: #efe7de;
-  --glass: rgba(255, 255, 255, 0.72);
-  --border: rgba(40, 20, 10, 0.08);
-  --border-strong: rgba(40, 20, 10, 0.16);
-  --text: #1c1512;
-  --text-2: #43372f;
-  --muted: #7b6d63;
-  --faint: #ab9e94;
-  --mars: #e8421f;
-  --mars-glow: rgba(232, 66, 31, 0.25);
-  --mars-soft: rgba(232, 66, 31, 0.09);
-  --gold: #a87524;
-  --gold-soft: rgba(168, 117, 36, 0.1);
-  --word-new: rgba(232, 66, 31, 0.5);
-  --word-learning-bg: rgba(234, 170, 8, 0.2);
-  --word-hover: rgba(232, 66, 31, 0.12);
-  --shadow-md: 0 10px 30px -14px rgba(60, 30, 10, 0.25);
-  --shadow-lg: 0 30px 80px -30px rgba(60, 30, 10, 0.35);
-  color-scheme: light;
+/* ── Mode gelap: biru navy dengan cahaya biru ── */
+:root[data-theme="dark"] {
+  --accent-rgb: 59, 130, 246;
+  --accent2-rgb: 125, 211, 252;
+
+  --bg: #050b1a;
+  --bg-2: #081127;
+  --surface: #0c1731;
+  --surface-2: #11203f;
+  --surface-3: #182a4f;
+  --glass: rgba(12, 23, 49, 0.66);
+  --border: rgba(147, 197, 253, 0.08);
+  --border-strong: rgba(147, 197, 253, 0.16);
+
+  --text: #eef4ff;
+  --text-2: #c3d2ee;
+  --muted: #8193b8;
+  --faint: #52638a;
+
+  --mars: #3b82f6;
+  --mars-2: #60a5fa;
+  --mars-3: #93c5fd;
+  --mars-glow: rgba(59, 130, 246, 0.4);
+  --mars-soft: rgba(59, 130, 246, 0.14);
+  --gold: #7dd3fc;
+  --gold-soft: rgba(125, 211, 252, 0.12);
+  --grad-mars: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 55%, #7dd3fc 100%);
+  --grad-gold: linear-gradient(135deg, #e0f2fe 0%, #7dd3fc 100%);
+  --grad-surface: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01));
+  --on-gold: #06224a;
+
+  --ok: #4ade80;
+  --ok-soft: rgba(74, 222, 128, 0.12);
+  --warn: #fbbf24;
+  --warn-soft: rgba(251, 191, 36, 0.14);
+  --danger: #f87171;
+  --danger-soft: rgba(248, 113, 113, 0.12);
+  --info: #7dd3fc;
+  --info-soft: rgba(125, 211, 252, 0.12);
+
+  --n1: #93c5fd;
+
+  --word-new: rgba(96, 165, 250, 0.6);
+  --word-learning-bg: rgba(251, 191, 36, 0.16);
+  --word-hover: rgba(96, 165, 250, 0.18);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 10px 30px -12px rgba(0, 0, 0, 0.7);
+  --shadow-lg: 0 30px 80px -24px rgba(0, 0, 0, 0.85);
+  --ring: 0 0 0 3px rgba(96, 165, 250, 0.35);
+  color-scheme: dark;
 }

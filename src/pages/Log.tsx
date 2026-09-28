@@ -6,9 +6,9 @@ import { Heatmap } from "../components/Heatmap.tsx";
 import { Bar, PageHead, toast } from "../components/ui.tsx";
 
 const KINDS: { v: LogKind; label: string; color: string }[] = [
-  { v: "tonton", label: "Menonton", color: "#ff6a3d" },
-  { v: "dengar", label: "Mendengar", color: "#e9c37d" },
-  { v: "baca", label: "Membaca", color: "#7cc7ff" },
+  { v: "tonton", label: "Menonton", color: "#2563eb" },
+  { v: "dengar", label: "Mendengar", color: "#0ea5e9" },
+  { v: "baca", label: "Membaca", color: "#818cf8" },
   { v: "review", label: "Review", color: "#a78bfa" },
   { v: "bicara", label: "Berbicara", color: "#4ade80" },
   { v: "lainnya", label: "Lainnya", color: "#968d86" },

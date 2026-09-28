@@ -57,7 +57,7 @@ const KEY = "themars:v1";
 const initial = (): State => ({
   v: 1,
   profile: { name: "", level: 5, goalMin: 45, exam: null, onboarded: false, startedAt: Date.now() },
-  settings: { furigana: "unknown", ttsRate: 0.95, theme: "dark", showTranslation: false, autoPause: false, newPerDay: 15 },
+  settings: { furigana: "unknown", ttsRate: 0.95, theme: "light", showTranslation: false, autoPause: false, newPerDay: 15 },
   words: {},
   cards: {},
   log: [],
